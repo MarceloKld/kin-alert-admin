@@ -1,5 +1,6 @@
 "use client";
 import { Bell, Menu, UserCircle, X } from 'lucide-react'; // Icônes SVG haute qualité
+import ThemeToggle from "@/components/shared/ThemeToggle";
 
 interface NavbarProps {
     onMenuClick: () => void;
@@ -23,6 +24,9 @@ export default function Navbar({ onMenuClick, isMobileMenuOpen }: NavbarProps) {
             </div>
 
             <div className="flex items-center gap-4">
+                {/* Bouton Dark Mode */}
+                <ThemeToggle />
+
                 {/* Notification avec point rouge SVG */}
                 <button className="relative p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-all active:scale-90">
                     <Bell size={20} />
