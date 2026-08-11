@@ -50,6 +50,39 @@ export default function DashboardPage() {
             animate="visible"
             className="p-4 md:p-8 space-y-8"
         >
+            {/* 1.5 LIVE TICKER (Défilement des types d'incidents) */}
+            <div className="bg-slate-900 text-white py-3 overflow-hidden border-y border-slate-800">
+                <motion.div
+                    initial={{ x: "100%" }}
+                    animate={{ x: "-100%" }}
+                    transition={{
+                        repeat: Infinity,
+                        duration: 25, // Vitesse du défilement
+                        ease: "linear"
+                    }}
+                    className="flex whitespace-nowrap gap-12 items-center"
+                >
+                    {[
+                        "⚠️ URGENCE : DANGER IMMÉDIAT",
+                        "Embouteillage critique",
+                        "Panne d'électricité",
+                        "Érosion / Ravin",
+                        "Tas d'immondices",
+                        "Tuyau de la REGIDESO cassé",
+                        "Feu de signalisation en panne",
+                        "Éclairage public défectueux",
+                        "Nuisance sonore",
+                        "Autres signalements..."
+                    ].map((titre, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                            <span className="text-sm font-bold uppercase tracking-wider">{titre}</span>
+                        </div>
+                    ))}
+                </motion.div>
+            </div>
+
+
             {/* 1. HEADER */}
             <div className="flex justify-between items-end">
                 <div>
@@ -62,11 +95,21 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* 2. STATS CARDS */}
+            {/* 2. STATS CARDS GRID */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="Total Incidents" value={data?.stats.incidents_total} icon={<AlertCircle className="text-amber-500" />} color="border-amber-500/20" />
                 <StatCard title="En Attente" value={data?.stats.incidents_pending} icon={<ShieldAlert className="text-red-500" />} color="border-red-500/20" />
                 <StatCard title="Validés" value={data?.stats.incidents_validated} icon={<CheckCircle className="text-emerald-500" />} color="border-emerald-500/20" />
+
+                {/* Nouvelle Carte : Gestionnaires */}
+                <StatCard title="Gestionnaires" value={data?.stats.gestionnaires_total} icon={<Users className="text-indigo-500" />} color="border-indigo-500/20" />
+
+                {/* Nouvelle Carte : Rejetés */}
+                <StatCard title="Rejetés" value={data?.stats.incidents_rejected} icon={<AlertCircle className="text-rose-500" />} color="border-rose-500/20" />
+
+                {/* Nouvelle Carte : Supprimés */}
+                <StatCard title="Supprimés" value={data?.stats.incidents_deleted} icon={<BarChart3 className="text-slate-500" />} color="border-slate-500/20" />
+
                 <StatCard title="Citoyens" value={data?.stats.users_total} icon={<Users className="text-blue-500" />} color="border-blue-500/20" />
             </div>
 
