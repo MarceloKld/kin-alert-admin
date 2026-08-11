@@ -115,3 +115,25 @@ export interface GlobalStats {
   total_utilisateurs: number;
   total_gestionnaires?: number;
 }
+
+
+// ---------------------------------------------------------------------------
+// DASHBOARD GLOBAL PREMIUM
+// ---------------------------------------------------------------------------
+export interface DashboardData {
+  stats: {
+    users_total: number;
+    gestionnaires_total: number;
+    incidents_total: number;
+    incidents_pending: number;
+    incidents_validated: number;
+    incidents_rejected: number;
+    incidents_deleted: number;
+  };
+  charts: {
+    incidents_by_month: { month: string; total: number }[];
+    incidents_by_type: { titre: string; total: number }[];
+    top_communes: { nom: string; total: number }[]; // Déplacé ici
+    users_growth: { month: string; total: number }[]; // Déplacé ici
+  };
+}
