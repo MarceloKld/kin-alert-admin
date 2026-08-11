@@ -1,23 +1,23 @@
-import withPWAInit from 'next-pwa';
+import type { NextConfig } from "next";
+// @ts-ignore
+import withPWAInit from "next-pwa";
 
 const withPWA = withPWAInit({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
 });
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // Cette option permet de dire à Next.js qu'on assume l'utilisation de Webpack
-  webpack: (config) => {
+const nextConfig: NextConfig = {
+  // Silence l'erreur Turbopack sur Vercel
+  turbopack: {},
+  
+  // On type explicitement config avec 'any' pour retirer l'erreur TS
+  webpack: (config: any) => {
     return config;
   },
-  // On ajoute un objet turbopack vide pour éviter le conflit
-  experimental: {
-    // Si ta version de Next est très récente, utilise cette syntaxe
-    turbopack: {},
-  }
 };
 
-export default withPWA(nextConfig);
+// Le cast 'as any' corrige l'erreur de typage propre à next-pwa
+export default (withPWA as any)(nextConfig);
