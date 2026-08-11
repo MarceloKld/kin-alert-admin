@@ -8,7 +8,16 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      keyframes: {
+        shine: {
+          "100%": { left: "125%" },
+        },
+      },
+      animation: {
+        shine: "shine 0.75s",
+      },
+    },
   },
   plugins: [],
 };
