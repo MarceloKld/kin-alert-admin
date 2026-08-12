@@ -8,14 +8,16 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 function isIosUA() {
-    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (typeof window === "undefined") return false;
+    return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
 function isStandaloneMode() {
+    if (typeof window === "undefined") return false;
     return (
         window.matchMedia?.("(display-mode: standalone)").matches ||
         // @ts-expect-error iOS legacy
-        navigator.standalone === true
+        window.navigator.standalone === true
     );
 }
 
