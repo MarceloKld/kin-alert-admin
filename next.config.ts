@@ -9,8 +9,11 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["localhost", "192.168.1.91", "192.168.1.91:3000"],
   reactCompiler: true,
   webpack: (config: Configuration) => config,
 };
 
 export default withPWA(nextConfig);
+
+
