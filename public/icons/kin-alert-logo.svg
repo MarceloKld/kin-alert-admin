@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="0.55" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10" result="b"/>
+      <feColorMatrix in="b" type="matrix"
+        values="0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 .35 0" result="s"/>
+      <feMerge>
+        <feMergeNode in="s"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- badge -->
+  <path filter="url(#soft)"
+    d="M256 36c92.1 0 220 64.7 220 220S348.1 476 256 476 36 411.3 36 256 163.9 36 256 36z"
+    fill="url(#g)"/>
+
+  <!-- inner panel -->
+  <path d="M256 84c78.4 0 172 52.7 172 172s-93.6 172-172 172S84 334.3 84 256 177.6 84 256 84z"
+    fill="rgba(11,15,25,.92)"/>
+
+  <!-- stylized KA + alert mark -->
+  <path d="M188 176h34v62l56-62h43l-62 67 66 93h-41l-48-69-19 20v49h-34V176z"
+        fill="#EAF2FF"/>
+  <path d="M332 182c15 0 27 12 27 27v63c0 15-12 27-27 27s-27-12-27-27v-63c0-15 12-27 27-27z"
+        fill="#22D3EE"/>
+  <circle cx="332" cy="336" r="18" fill="#FBBF24"/>
+</svg>

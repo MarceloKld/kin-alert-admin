@@ -1,25 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextConfig } from "next";
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import withPWAInit from "next-pwa";
+import withPWAInit from "@ducanh2912/next-pwa";
+import type { Configuration } from "webpack";
 
 const withPWA = withPWAInit({
   dest: "public",
-  disable: process.env.NODE_ENV === "development",
   register: true,
-  skipWaiting: true,
-} as any);
+  disable: process.env.NODE_ENV === "development",
+});
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  allowedDevOrigins: ["192.168.1.91", "localhost"],
-  turbopack: {},
-  
-  webpack: (config: any) => {
-    return config;
-  },
+  webpack: (config: Configuration) => config,
 };
 
-export default (withPWA as any)(nextConfig);
+export default withPWA(nextConfig);

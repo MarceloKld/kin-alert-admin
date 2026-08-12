@@ -1,70 +1,115 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Download, X, Smartphone } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
-export const PWAInstall = () => {
-    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-    const [isVisible, setIsVisible] = useState(false);
+type BeforeInstallPromptEvent = Event & {
+    prompt: () => Promise<void>;
+    userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+
+function isIosUA() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function isStandaloneMode() {
+    return (
+        window.matchMedia?.("(display-mode: standalone)").matches ||
+        // @ts-expect-error iOS legacy
+        navigator.standalone === true
+    );
+}
+
+export default function PWAInstall() {
+    const ios = useMemo(() => isIosUA(), []);
+    const standalone = useMemo(() => isStandaloneMode(), []);
+
+    const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
+    const [open, setOpen] = useState(() => !standalone && ios);
 
     useEffect(() => {
-        // On écoute l'événement d'installation du navigateur
-        window.addEventListener("beforeinstallprompt", (e) => {
-            e.preventDefault();
-            setDeferredPrompt(e);
-            // On affiche le message après 3 secondes pour ne pas agresser l'utilisateur
-            setTimeout(() => setIsVisible(true), 3000);
-        });
-    }, []);
+        if (standalone) return;
 
-    const handleInstall = async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === "accepted") {
-                setDeferredPrompt(null);
-                setIsVisible(false);
-            }
-        }
-    };
+        const handler = (e: Event) => {
+            e.preventDefault();
+            setDeferred(e as BeforeInstallPromptEvent);
+            setOpen(true);
+        };
+
+        window.addEventListener("beforeinstallprompt", handler);
+        window.addEventListener("appinstalled", () => {
+            setOpen(false);
+            setDeferred(null);
+        });
+
+        return () => window.removeEventListener("beforeinstallprompt", handler);
+    }, [standalone]);
+
+    if (!open || standalone) return null;
 
     return (
-        <AnimatePresence>
-            {isVisible && (
-                <motion.div
-                    initial={{ y: 100, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 100, opacity: 0 }}
-                    className="fixed bottom-6 left-6 right-6 md:left-auto md:w-96 z-[100]"
-                >
-                    <div className="bg-slate-900 border border-slate-800 p-5 rounded-[2rem] shadow-2xl shadow-red-500/20 flex items-center gap-4">
-                        <div className="bg-red-500 p-3 rounded-2xl text-white shadow-lg shadow-red-500/40">
-                            <Smartphone size={24} />
+        <div style={{ position: "fixed", left: 16, right: 16, bottom: 16, zIndex: 50 }}>
+            <div
+                style={{
+                    borderRadius: 16,
+                    padding: 16,
+                    background: "rgba(11,15,25,.92)",
+                    color: "white",
+                    border: "1px solid rgba(255,255,255,.12)",
+                    backdropFilter: "blur(10px)",
+                }}
+            >
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <img src="/icons/kin-alert-logo.svg" alt="Kin Alert" width={40} height={40} />
+
+                    <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14 }}>Installer Kin Alert</div>
+                        <div style={{ opacity: 0.85, fontSize: 12, marginTop: 2 }}>
+                            Accès rapide, plein écran, meilleure fluidité.
                         </div>
 
-                        <div className="flex-1">
-                            <h4 className="text-white font-bold text-sm">KIN-ALERT sur mobile ?</h4>
-                            <p className="text-slate-400 text-xs">Installez l'application pour un accès rapide.</p>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <button
-                                onClick={handleInstall}
-                                className="bg-white text-black px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-500 hover:text-white transition-colors flex items-center gap-2"
-                            >
-                                <Download size={14} /> Installer
-                            </button>
-                            <button
-                                onClick={() => setIsVisible(false)}
-                                className="text-slate-500 text-[10px] uppercase font-bold text-center hover:text-white"
-                            >
-                                Plus tard
-                            </button>
-                        </div>
+                        {ios && (
+                            <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
+                                iPhone/iPad : <b>Partager</b> → <b>Sur l’écran d’accueil</b>
+                            </div>
+                        )}
                     </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+
+                    <button
+                        onClick={() => setOpen(false)}
+                        style={{
+                            background: "transparent",
+                            color: "white",
+                            border: "1px solid rgba(255,255,255,.18)",
+                            padding: "8px 10px",
+                            borderRadius: 12,
+                            cursor: "pointer",
+                        }}
+                    >
+                        Plus tard
+                    </button>
+
+                    {!ios && deferred && (
+                        <button
+                            onClick={async () => {
+                                await deferred.prompt();
+                                const choice = await deferred.userChoice;
+                                if (choice.outcome === "accepted") setOpen(false);
+                            }}
+                            style={{
+                                background: "linear-gradient(135deg,#7C3AED,#22D3EE)",
+                                color: "white",
+                                border: "none",
+                                padding: "8px 12px",
+                                borderRadius: 12,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                            }}
+                        >
+                            Installer
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
     );
-};
+}

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import PWAInstall from "@/components/shared/PWAInstall";
 import "./globals.css";
+import dynamic from "next/dynamic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +42,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <PWAInstall />
         </ThemeProvider>
       </body>
     </html>
