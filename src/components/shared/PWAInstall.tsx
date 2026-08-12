@@ -12,7 +12,6 @@ function isIosUA() {
     if (typeof window === "undefined") return false;
     return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
-
 function isStandaloneMode() {
     if (typeof window === "undefined") return false;
     return (
@@ -27,33 +26,27 @@ export default function PWAInstall() {
     const standalone = useMemo(() => isStandaloneMode(), []);
 
     const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
-    const [open, setOpen] = useState(false);
 
-    // 1) Ouvrir le banner après un délai (Android + iOS), même si beforeinstallprompt n'arrive pas
-    useEffect(() => {
-        if (standalone) return;
+    // ✅ plus de setState dans useEffect: on lit localStorage à l'init
+    const [closed, setClosed] = useState(() => {
+        if (typeof window === "undefined") return false;
+        return localStorage.getItem("pwa:dismissed") === "1";
+    });
 
-        const dismissed = localStorage.getItem("pwa:dismissed");
-        if (dismissed === "1") return;
+    const [showHelp, setShowHelp] = useState(false);
 
-        const t = window.setTimeout(() => setOpen(true), 1500);
-        return () => window.clearTimeout(t);
-    }, [standalone]);
-
-    // 2) Capturer beforeinstallprompt quand il arrive (Chrome/Edge Android/Desktop)
     useEffect(() => {
         if (standalone) return;
 
         const handler = (e: Event) => {
             e.preventDefault();
             setDeferred(e as BeforeInstallPromptEvent);
-            setOpen(true);
         };
 
         const onInstalled = () => {
-            setOpen(false);
-            setDeferred(null);
             localStorage.setItem("pwa:dismissed", "1");
+            setClosed(true);
+            setDeferred(null);
         };
 
         window.addEventListener("beforeinstallprompt", handler);
@@ -65,92 +58,73 @@ export default function PWAInstall() {
         };
     }, [standalone]);
 
-    if (!open || standalone) return null;
+    if (standalone || closed) return null;
+
+    const onInstall = async () => {
+        if (ios) {
+            setShowHelp(true);
+            return;
+        }
+        if (!deferred) {
+            setShowHelp(true);
+            return;
+        }
+        await deferred.prompt();
+        const res = await deferred.userChoice;
+        if (res.outcome === "accepted") {
+            localStorage.setItem("pwa:dismissed", "1");
+            setClosed(true);
+        }
+    };
 
     return (
-        <div style={{ position: "fixed", left: 16, right: 16, bottom: 16, zIndex: 50 }}>
-            <div
-                style={{
-                    borderRadius: 16,
-                    padding: 16,
-                    background: "rgba(11,15,25,.92)",
-                    color: "white",
-                    border: "1px solid rgba(255,255,255,.12)",
-                    backdropFilter: "blur(10px)",
-                }}
-            >
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                    <Image
-                        src="/icons/kin-alert-logo.svg"
-                        alt="Kin Alert"
-                        width={40}
-                        height={40}
-                        priority
-                        unoptimized
-                    />
+        <div className="fixed left-3 right-3 top-3 z-50">
+            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/85 px-4 py-3 text-white backdrop-blur">
+                <Image
+                    src="/icons/kin-alert-logo.svg"
+                    alt="Kin Alert"
+                    width={36}
+                    height={36}
+                    unoptimized
+                    priority
+                    className="shrink-0"
+                />
 
-                    <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14 }}>Installer Kin Alert</div>
-                        <div style={{ opacity: 0.85, fontSize: 12, marginTop: 2 }}>
-                            Accès rapide, plein écran, meilleure fluidité.
+                <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">Installer Kin Alert</div>
+                    <div className="truncate text-xs text-white/70">Ajouter l’app sur ton écran</div>
+
+                    {showHelp && (
+                        <div className="mt-1 text-[11px] text-white/80">
+                            {ios ? (
+                                <>
+                                    iPhone/iPad : <b>Partager</b> → <b>Sur l’écran d’accueil</b>
+                                </>
+                            ) : (
+                                <>
+                                    Android : menu <b>⋮</b> → <b>Installer l’application</b>
+                                </>
+                            )}
                         </div>
-
-                        {ios ? (
-                            <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
-                                iPhone/iPad : <b>Partager</b> → <b>Sur l’écran d’accueil</b>
-                            </div>
-                        ) : deferred ? (
-                            <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
-                                Installation disponible sur cet appareil.
-                            </div>
-                        ) : (
-                            <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
-                                Android : menu <b>⋮</b> → <b>Installer l’application</b> / <b>Ajouter à l’écran d’accueil</b>
-                            </div>
-                        )}
-                    </div>
-
-                    <button
-                        onClick={() => {
-                            localStorage.setItem("pwa:dismissed", "1");
-                            setOpen(false);
-                        }}
-                        style={{
-                            background: "transparent",
-                            color: "white",
-                            border: "1px solid rgba(255,255,255,.18)",
-                            padding: "8px 10px",
-                            borderRadius: 12,
-                            cursor: "pointer",
-                        }}
-                    >
-                        Fermer
-                    </button>
-
-                    {!ios && deferred && (
-                        <button
-                            onClick={async () => {
-                                await deferred.prompt();
-                                const choice = await deferred.userChoice;
-                                if (choice.outcome === "accepted") {
-                                    setOpen(false);
-                                    localStorage.setItem("pwa:dismissed", "1");
-                                }
-                            }}
-                            style={{
-                                background: "linear-gradient(135deg,#7C3AED,#22D3EE)",
-                                color: "white",
-                                border: "none",
-                                padding: "8px 12px",
-                                borderRadius: 12,
-                                fontWeight: 700,
-                                cursor: "pointer",
-                            }}
-                        >
-                            Installer
-                        </button>
                     )}
                 </div>
+
+                <button
+                    onClick={() => {
+                        localStorage.setItem("pwa:dismissed", "1");
+                        setClosed(true);
+                    }}
+                    className="rounded-xl border border-white/15 px-3 py-2 text-xs text-white/90"
+                >
+                    Fermer
+                </button>
+
+                <button
+                    onClick={onInstall}
+                    className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                >
+                    Installer
+                </button>
             </div>
         </div>
     );
