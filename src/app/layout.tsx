@@ -9,9 +9,9 @@ export const metadata: Metadata = {
   description: "Plateforme d'administration KIN ALERT",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/icons/icon-192.png",
-    shortcut: "/icons/icon-192.png",
-    apple: "/icons/icon-192.png",
+    icon: "/icons/logo.png",
+    shortcut: "/icons/logo.png",
+    apple: "/icons/logo.png",
   },
 };
 
