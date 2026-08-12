@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"; // Pour les animations 
 import { Shield, Mail, Lock, Loader2, AlertCircle } from "lucide-react"; // Icônes premium
 import { AuthService } from "@/services/auth.service";
 import axios from "axios";
+import LoginNotice from "@/components/auth/LoginNotice";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -79,6 +80,7 @@ export default function LoginPage() {
                     <div className="inline-flex p-4 rounded-2xl bg-red-600 mb-4 shadow-lg shadow-red-600/20">
                         <Shield size={40} className="text-white" />
                     </div>
+                    <LoginNotice />
                     <h1 className="text-3xl font-bold text-white tracking-tight">KIN-ALERT</h1>
                     <p className="text-slate-400 mt-2"> Portail d&apos;Administration Sécurisé</p>
                 </div>

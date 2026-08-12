@@ -1,18 +1,39 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/shared/Sidebar";
 import Navbar from "@/components/shared/Navbar";
+
 
 interface DashboardLayoutProps {
     children: ReactNode;
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const [checked, setChecked] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            router.replace(`/login?reason=auth&next=${encodeURIComponent(pathname)}`);
+            return;
+        }
+
+        // Asynchronise la mise à jour de l'état pour éviter le rendu en cascade
+        queueMicrotask(() => {
+            setChecked(true);
+        });
+    }, [router, pathname]);
 
     const toggleMenu = () => setIsMobileMenuOpen((prev) => !prev);
     const closeMenu = () => setIsMobileMenuOpen(false);
+
+    // Bloque le rendu du layout tant que la vérification du token n'est pas faite
+    if (!checked) return null;
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
