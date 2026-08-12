@@ -154,7 +154,7 @@ export default function LoginPage() {
 
                 {/* Footer de page */}
                 <p className="text-center text-slate-500 text-sm mt-8">
-                    &copy; 2024 KIN-ALERT. Tous droits réservés.
+                    &copy; 2026 KIN-ALERT. Tous droits réservés.
                 </p>
             </motion.div>
         </div>
