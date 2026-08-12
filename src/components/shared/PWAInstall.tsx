@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 type BeforeInstallPromptEvent = Event & {
@@ -26,8 +27,20 @@ export default function PWAInstall() {
     const standalone = useMemo(() => isStandaloneMode(), []);
 
     const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
-    const [open, setOpen] = useState(() => !standalone && ios);
+    const [open, setOpen] = useState(false);
 
+    // 1) Ouvrir le banner après un délai (Android + iOS), même si beforeinstallprompt n'arrive pas
+    useEffect(() => {
+        if (standalone) return;
+
+        const dismissed = localStorage.getItem("pwa:dismissed");
+        if (dismissed === "1") return;
+
+        const t = window.setTimeout(() => setOpen(true), 1500);
+        return () => window.clearTimeout(t);
+    }, [standalone]);
+
+    // 2) Capturer beforeinstallprompt quand il arrive (Chrome/Edge Android/Desktop)
     useEffect(() => {
         if (standalone) return;
 
@@ -37,13 +50,19 @@ export default function PWAInstall() {
             setOpen(true);
         };
 
-        window.addEventListener("beforeinstallprompt", handler);
-        window.addEventListener("appinstalled", () => {
+        const onInstalled = () => {
             setOpen(false);
             setDeferred(null);
-        });
+            localStorage.setItem("pwa:dismissed", "1");
+        };
 
-        return () => window.removeEventListener("beforeinstallprompt", handler);
+        window.addEventListener("beforeinstallprompt", handler);
+        window.addEventListener("appinstalled", onInstalled);
+
+        return () => {
+            window.removeEventListener("beforeinstallprompt", handler);
+            window.removeEventListener("appinstalled", onInstalled);
+        };
     }, [standalone]);
 
     if (!open || standalone) return null;
@@ -61,7 +80,14 @@ export default function PWAInstall() {
                 }}
             >
                 <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                    <img src="/icons/kin-alert-logo.svg" alt="Kin Alert" width={40} height={40} />
+                    <Image
+                        src="/icons/kin-alert-logo.svg"
+                        alt="Kin Alert"
+                        width={40}
+                        height={40}
+                        priority
+                        unoptimized
+                    />
 
                     <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 700, fontSize: 14 }}>Installer Kin Alert</div>
@@ -69,15 +95,26 @@ export default function PWAInstall() {
                             Accès rapide, plein écran, meilleure fluidité.
                         </div>
 
-                        {ios && (
+                        {ios ? (
                             <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
                                 iPhone/iPad : <b>Partager</b> → <b>Sur l’écran d’accueil</b>
+                            </div>
+                        ) : deferred ? (
+                            <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
+                                Installation disponible sur cet appareil.
+                            </div>
+                        ) : (
+                            <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
+                                Android : menu <b>⋮</b> → <b>Installer l’application</b> / <b>Ajouter à l’écran d’accueil</b>
                             </div>
                         )}
                     </div>
 
                     <button
-                        onClick={() => setOpen(false)}
+                        onClick={() => {
+                            localStorage.setItem("pwa:dismissed", "1");
+                            setOpen(false);
+                        }}
                         style={{
                             background: "transparent",
                             color: "white",
@@ -87,7 +124,7 @@ export default function PWAInstall() {
                             cursor: "pointer",
                         }}
                     >
-                        Plus tard
+                        Fermer
                     </button>
 
                     {!ios && deferred && (
@@ -95,7 +132,10 @@ export default function PWAInstall() {
                             onClick={async () => {
                                 await deferred.prompt();
                                 const choice = await deferred.userChoice;
-                                if (choice.outcome === "accepted") setOpen(false);
+                                if (choice.outcome === "accepted") {
+                                    setOpen(false);
+                                    localStorage.setItem("pwa:dismissed", "1");
+                                }
                             }}
                             style={{
                                 background: "linear-gradient(135deg,#7C3AED,#22D3EE)",
