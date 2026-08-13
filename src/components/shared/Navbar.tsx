@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Bell, Menu, UserCircle, X } from "lucide-react";
-import ThemeToggle from "@/components/shared/ThemeToggle";
 
 
 interface NavbarProps {
@@ -89,10 +88,6 @@ export default function Navbar({ onMenuClick, isMobileMenuOpen }: NavbarProps) {
 
 
             <div className="flex items-center gap-4">
-                {/* Bouton Dark Mode */}
-                <ThemeToggle />
-
-
 
                 {/* ========================================
     NOTIFICATIONS
