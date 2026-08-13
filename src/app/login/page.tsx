@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion"; // Pour les animations premium
-import { Shield, Mail, Lock, Loader2, AlertCircle } from "lucide-react"; // Icônes premium
+import { Shield, Mail, Lock, Loader2, AlertCircle, X } from "lucide-react"; // Icônes premium
 import { AuthService } from "@/services/auth.service";
 import axios from "axios";
 
@@ -31,31 +31,34 @@ export default function LoginPage() {
         try {
             const data = await AuthService.login({ email, password });
 
-            if (data.user.role === 'utilisateur') {
-                AuthService.logout();
-                setError("Accès refusé. Ce portail est réservé à l'administration.");
+            // Liste des rôles autorisés à se connecter
+            const allowedRoles = ['gestionnaire', 'administrateur', 'admin'];
+
+            // 1. BLOCAGE FRONTEND : Si le rôle n'est NI gestionnaire NI administrateur
+            if (!allowedRoles.includes(data.user.role)) {
+                // 👈 'false' empêche le rechargement de la page
+                AuthService.logout(false);
+                setError("Accès refusé. Seuls les gestionnaires et les administrateurs ont accès à ce portail.");
                 return;
             }
 
+            // Redirection vers le tableau de bord
             router.push("/dashboard");
 
-        } catch (err: unknown) { // <--- On utilise 'unknown' au lieu de 'any' pour la sécurité
-
-            // 2. On vérifie si c'est bien une erreur venant d'Axios
+        } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
-                // 3. On "cast" la réponse pour que TS comprenne la structure (notre interface définie plus haut)
                 const serverError = err.response?.data as LaravelErrorResponse;
 
                 if (err.response?.status === 401) {
-                    setError("Identifiants incorrects. Veuillez réessayer.");
+                    setError("Email ou mot de passe incorrect.");
+                } else if (err.response?.status === 403) {
+                    setError(serverError?.message || "Accès interdit. Vous n'avez pas les droits nécessaires.");
                 } else if (err.response?.status === 422) {
-                    // Affiche le message de validation spécifique de Laravel
-                    setError(serverError?.message || "Données invalides.");
+                    setError(serverError?.message || "Données saisies invalides.");
                 } else {
                     setError("Une erreur de communication avec le serveur est survenue.");
                 }
             } else {
-                // 4. Si c'est une erreur JavaScript classique
                 setError("Une erreur inattendue est survenue.");
             }
         } finally {
@@ -63,44 +66,157 @@ export default function LoginPage() {
         }
     };
 
+
+
+
+
+
+    
     return (
-        <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Background décoratif (Cercles animés pour le côté premium) */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-red-900/20 rounded-full blur-[120px]" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-900/20 rounded-full blur-[120px]" />
+        <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+
+            {/* ===== BACKGROUND EFFECTS ===== */}
+            <motion.div
+                animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.15, 0.25, 0.15],
+                }}
+                transition={{
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                }}
+                className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-gradient-to-br from-red-600/30 to-orange-600/20 rounded-full blur-[120px]"
+            />
 
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md"
-            >
-            
-                {/* Logo & Titre */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex p-4 rounded-2xl bg-red-600 mb-4 shadow-lg shadow-red-600/20">
-                        <Shield size={40} className="text-white" />
-                    </div>
-                  
-                    <h1 className="text-3xl font-bold text-white tracking-tight">KIN-ALERT</h1>
-                    <p className="text-slate-400 mt-2"> Portail d&apos;Administration Sécurisé</p>
+                animate={{
+                    scale: [1.2, 1, 1.2],
+                    opacity: [0.2, 0.3, 0.2],
+                }}
+                transition={{
+                    duration: 10,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 1
+                }}
+                className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gradient-to-tl from-blue-600/20 to-purple-600/20 rounded-full blur-[120px]"
+            />
+
+            <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02]" />
+            <div className="absolute inset-0 bg-noise opacity-[0.015]" />
+
+            {/* =========================================================
+               CONTENEUR CENTRAL UNIQUE (Englobe Logo + Formulaire + Footer)
+            ========================================================= */}
+            <div className="relative z-10 w-full max-w-md space-y-6">
+
+                {/* LOGO & TITRE */}
+                <div className="text-center">
+                    <motion.div
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{
+                            type: "spring",
+                            stiffness: 200,
+                            damping: 15,
+                            delay: 0.2
+                        }}
+                        className="inline-flex relative mb-4"
+                    >
+                        <div className="absolute inset-0 bg-red-600 rounded-2xl blur-2xl opacity-40 animate-pulse" />
+                        <div className="relative p-5 rounded-2xl bg-gradient-to-br from-red-600 via-red-600 to-red-700 shadow-2xl shadow-red-600/30 border border-red-500/30">
+                            <Shield size={48} className="text-white drop-shadow-2xl" strokeWidth={2.5} />
+                        </div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            className="absolute -bottom-2 -right-2 px-2.5 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-lg"
+                        >
+                            Admin
+                        </motion.div>
+                    </motion.div>
+
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-4xl font-bold tracking-tight mb-2"
+                    >
+                        <span className="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+                            KIN-ALERT
+                        </span>
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-slate-400 text-sm font-medium"
+                    >
+                        <span className="inline-flex items-center gap-2">
+                            <Lock size={14} className="text-red-500" />
+                            Portail d&apos;Administration Sécurisé
+                        </span>
+                    </motion.p>
                 </div>
 
-                {/* Carte du Formulaire */}
-                <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 p-8 rounded-3xl shadow-2xl">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                {/* CARTE FORMULAIRE */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="relative bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 p-8 rounded-3xl shadow-2xl shadow-black/50"
+                >
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-                        {/* Affichage des erreurs avec animation */}
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* MESSAGES D'ERREUR */}
                         <AnimatePresence mode="wait">
                             {error && (
                                 <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="bg-red-500/10 border border-red-500/50 p-4 rounded-xl flex items-center gap-3 text-red-500 text-sm"
+                                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                    animate={{
+                                        opacity: 1,
+                                        y: 0,
+                                        scale: 1,
+                                        x: [0, -5, 5, -5, 5, 0]
+                                    }}
+                                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                    transition={{
+                                        x: { duration: 0.4, delay: 0.1 },
+                                        default: { duration: 0.3 }
+                                    }}
+                                    className="relative overflow-hidden"
                                 >
-                                    <AlertCircle size={18} />
-                                    {error}
+                                    <motion.div
+                                        animate={{ x: ['-100%', '100%'] }}
+                                        transition={{
+                                            duration: 2,
+                                            repeat: Infinity,
+                                            ease: "linear"
+                                        }}
+                                        className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/10 to-transparent"
+                                    />
+                                    <div className="relative bg-red-500/10 backdrop-blur-sm border border-red-500/30 p-4 rounded-xl flex items-start gap-3">
+                                        <div className="relative">
+                                            <div className="absolute inset-0 bg-red-500 rounded-full blur-md opacity-50 animate-pulse" />
+                                            <AlertCircle size={20} className="relative text-red-400" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-red-400 text-sm font-medium leading-relaxed">
+                                                {error}
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setError(null)}
+                                            className="text-red-400/60 hover:text-red-400 transition-colors"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -153,13 +269,15 @@ export default function LoginPage() {
                             )}
                         </button>
                     </form>
-                </div>
+                </motion.div>
 
                 {/* Footer de page */}
-                <p className="text-center text-slate-500 text-sm mt-8">
+                <p className="text-center text-slate-500 text-sm">
                     &copy; 2026 KIN-ALERT. Tous droits réservés.
                 </p>
-            </motion.div>
+
+            </div> {/* FIN DU CONTENEUR CENTRAL */}
+
         </div>
     );
 }

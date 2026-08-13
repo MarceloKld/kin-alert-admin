@@ -266,49 +266,6 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                     </div>
                 </motion.div>
 
-                {/* ===== BOUTON DÉCONNEXION ===== */}
-                <motion.button
-                    // ANIMATIONS
-                    whileHover={{ scale: 1.02 }}  // Léger agrandissement
-                    whileTap={{ scale: 0.98 }}    // Réduit au clic
-                    onClick={handleLogout}
-                    className="
-            relative group
-            flex items-center gap-3 px-4 py-3.5 w-full
-            text-slate-400 hover:text-red-400
-            bg-slate-800/40 hover:bg-red-500/10
-            border border-slate-700/50 hover:border-red-500/50
-            rounded-xl
-            transition-all duration-300
-            overflow-hidden
-        "
-                >
-                    {/* Effet gradient au hover (s'affiche de gauche à droite) */}
-                    <div className="absolute inset-0 bg-linear-to-r from-red-600/0 via-red-600/0 to-red-600/0 group-hover:from-red-600/10 group-hover:via-red-600/5 group-hover:to-transparent transition-all duration-500" />
-
-                    {/* ===== ICÔNE LOGOUT avec rotation ===== */}
-                    <motion.div
-                        whileHover={{ rotate: -15 }}  // Rotation au hover
-                        transition={{ type: "spring", stiffness: 300 }}
-                    >
-                        <LogOut size={20} className="text-red-400 drop-shadow-lg relative z-10" />
-                    </motion.div>
-
-                    {/* ===== TEXTE ===== */}
-                    <span className="relative z-10 font-semibold tracking-wide">
-                        Déconnexion
-                    </span>
-
-                    {/* ===== CHEVRON animé ===== */}
-                    <motion.div
-                        className="ml-auto relative z-10"
-                        initial={{ x: 0 }}
-                        whileHover={{ x: 4 }}  // Décalage droite au hover
-                    >
-                        <ChevronRight size={16} className="text-red-400" />
-                    </motion.div>
-                </motion.button>
-
                 {/* ===== BARRE DÉCORATIVE BOTTOM ===== */}
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-linear-to-r from-red-600 via-red-500 to-orange-500 opacity-50" />
             </div>

@@ -27,13 +27,14 @@ export const AuthService = {
     return response.data;
   },
 
-  logout: () => {
+  // 👈 On ajoute 'redirect = true' par défaut
+  logout: (redirect: boolean = true) => {
     // Nettoyage complet
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-   // Sécurisation pour Next.js (SSR)
-    if (typeof window !== "undefined") {
-        window.location.href = "/login";
+    // Redirection SEULEMENT si autorisée
+    if (redirect && typeof window !== "undefined") {
+      window.location.href = "/login";
     }
   },
 };

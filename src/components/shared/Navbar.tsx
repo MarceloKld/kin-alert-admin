@@ -79,11 +79,11 @@ export default function Navbar({ onMenuClick, isMobileMenuOpen }: NavbarProps) {
         backdrop-blur-xl 
         border-b border-slate-800/50
         shadow-lg shadow-black/10
-        fixed top-0 right-0 left-0 lg:left-72 
+        fixed top-0 right-0 left-0 lg:left-64
         z-20 px-4 lg:px-6
         flex items-center justify-between
     "
-        > 
+        >
         
         {/* ========================================
     BOUTON MENU MOBILE
