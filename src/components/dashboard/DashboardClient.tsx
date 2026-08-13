@@ -125,7 +125,7 @@ export default function DashboardPage() {
 
         return (
             <motion.div
-                whileHover={{ scale: 1.05, y: -2 }}
+                whileHover={{ scale: 3.05, y: -2 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 className={`
                 group relative
@@ -152,10 +152,10 @@ export default function DashboardPage() {
                 {/* Icône SVG avec animation */}
                 <motion.div
                     animate={{
-                        rotate: priority === 'critical' ? [0, -5, 5, 0] : 0,
+                        rotate: priority === 'critical' ? [0, -9, 9, 0] : 0,
                     }}
                     transition={{
-                        duration: 2,
+                        duration: 3.5,
                         repeat: priority === 'critical' ? Infinity : 0,
                         ease: "easeInOut"
                     }}
@@ -193,7 +193,7 @@ export default function DashboardPage() {
                             scale: [1, 1.05, 1]
                         }}
                         transition={{
-                            duration: 1.5,
+                            duration: 3.5,
                             repeat: Infinity
                         }}
                         className="
@@ -262,7 +262,7 @@ export default function DashboardPage() {
                         animate={{ x: "-100%" }}
                         transition={{
                             repeat: Infinity,
-                            duration: 40, // Ajustez la vitesse
+                            duration: 60, // Ajustez la vitesse
                             ease: "linear"
                         }}
                         className="flex whitespace-nowrap gap-8 items-center pr-8"
