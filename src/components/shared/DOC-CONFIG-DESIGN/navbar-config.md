@@ -55,4 +55,21 @@ text-[9px]          → Taille texte badge
 // POINT STATUS
 bg-green-500        → Couleur (vert=online, orange=away, gris=offline)
 
-# 6. 
+# 6. Section Profil Utilisateur (avec données dynamiques)
+📝 Paramètres Modifiables
+React
+
+// ===== COULEURS PAR RÔLE =====
+administrateur → from-red-600 to-red-700      // Rouge
+moderateur     → from-blue-600 to-blue-700    // Bleu
+utilisateur    → from-slate-600 to-slate-700  // Gris
+
+// ===== AVATAR =====
+w-10 h-10      → Taille avatar
+text-sm        → Taille initiales
+
+// ===== STATUT =====
+statut === "actif"   → Point vert
+statut === "inactif" → Aucun point (modifiez la condition)
+
+# 7. 

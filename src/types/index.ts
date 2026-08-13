@@ -2,7 +2,7 @@
 // TYPES D'ÉNUMÉRATION (Conservés de votre code)
 // ---------------------------------------------------------------------------
 export type UserRole = "utilisateur" | "gestionnaire" | "administrateur";
-export type UserStatus = "actif" | "suspendu";
+export type UserStatus = "actif" | "inactif" | "suspendu";
 export type IncidentStatus = "en_attente" | "valide" | "rejete";
 
 // ---------------------------------------------------------------------------

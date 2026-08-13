@@ -64,7 +64,7 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
             <div className="relative p-6 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm">
                 {/* Ligne de progression décorative */}
                 <motion.div
-                    className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-red-600 via-red-500 to-transparent"
+                    className="absolute bottom-0 left-0 h-0.5 bg-linear-to-r from-red-600 via-red-500 to-transparent"
                     initial={{ width: 0 }}
                     animate={{ width: "100%" }}
                     transition={{ delay: 0.3, duration: 0.8 }}
@@ -91,7 +91,7 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                             <div className="absolute inset-0 bg-red-600 rounded-xl blur-xl opacity-40 animate-pulse" />
 
                             {/* Container de l'icône avec gradient */}
-                            <div className="relative bg-gradient-to-br from-red-600 via-red-600 to-red-700 p-2.5 rounded-xl shadow-lg shadow-red-600/40 border border-red-500/30">
+                            <div className="relative bg-linear-to-br from-red-600 via-red-600 to-red-700 p-2.5 rounded-xl shadow-lg shadow-red-600/40 border border-red-500/30">
                                 <Shield size={26} className="text-white drop-shadow-2xl" strokeWidth={2.5} />
                             </div>
 
@@ -102,11 +102,11 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                         {/* TEXTE DU LOGO - Double ligne */}
                         <div className="flex flex-col">
                             {/* Titre principal */}
-                            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+                            <span className="text-xl font-bold tracking-tight bg-linear-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
                                 KIN ALERT
                             </span>
                             {/* Sous-titre ADMIN */}
-                            <span className="text-[10px] font-bold tracking-widest uppercase bg-gradient-to-r from-red-500 via-red-600 to-red-700 bg-clip-text text-transparent">
+                            <span className="text-[10px] font-bold tracking-widest uppercase bg-linear-to-r from-red-500 via-red-600 to-red-700 bg-clip-text text-transparent">
                                 Admin Panel
                             </span>
                         </div>
@@ -137,7 +137,7 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
         "
                         >
                             {/* Effet gradient rouge au hover */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-red-600/0 to-red-600/0 group-hover:from-red-600/20 group-hover:to-transparent rounded-xl transition-all duration-300" />
+                            <div className="absolute inset-0 bg-linear-to-br from-red-600/0 to-red-600/0 group-hover:from-red-600/20 group-hover:to-transparent rounded-xl transition-all duration-300" />
 
                             {/* Icône X (relative pour être au-dessus du gradient) */}
                             <X size={20} className="relative" />
@@ -181,7 +181,7 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                             relative flex items-center gap-3 px-4 py-3.5 rounded-xl
                             transition-all duration-300
                             ${isActive
-                                            ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/40"
+                                            ? "bg-linear-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/40"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                         }
                         `}
@@ -284,7 +284,7 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
         "
                 >
                     {/* Effet gradient au hover (s'affiche de gauche à droite) */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-600/0 via-red-600/0 to-red-600/0 group-hover:from-red-600/10 group-hover:via-red-600/5 group-hover:to-transparent transition-all duration-500" />
+                    <div className="absolute inset-0 bg-linear-to-r from-red-600/0 via-red-600/0 to-red-600/0 group-hover:from-red-600/10 group-hover:via-red-600/5 group-hover:to-transparent transition-all duration-500" />
 
                     {/* ===== ICÔNE LOGOUT avec rotation ===== */}
                     <motion.div
@@ -310,7 +310,7 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                 </motion.button>
 
                 {/* ===== BARRE DÉCORATIVE BOTTOM ===== */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 opacity-50" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-linear-to-r from-red-600 via-red-500 to-orange-500 opacity-50" />
             </div>
         </aside>
     );

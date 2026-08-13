@@ -31,6 +31,9 @@ export const AuthService = {
     // Nettoyage complet
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.href = "/login";
+   // Sécurisation pour Next.js (SSR)
+    if (typeof window !== "undefined") {
+        window.location.href = "/login";
+    }
   },
 };
