@@ -67,7 +67,7 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                     className="absolute bottom-0 left-0 h-0.5 bg-linear-to-r from-red-600 via-red-500 to-transparent"
                     initial={{ width: 0 }}
                     animate={{ width: "100%" }}
-                    transition={{ delay: 0.3, duration: 0.8 }}
+                    transition={{ delay: 0.9, duration: 0.9 }}
                 />
 
                 <div className="relative flex items-center justify-between">
