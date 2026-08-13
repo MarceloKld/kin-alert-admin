@@ -73,7 +73,7 @@ export default function LoginPage() {
 
     
     return (
-        <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden bg-linear-to-br from-slate-950 via-slate-900 to-slate-950">
 
             {/* ===== BACKGROUND EFFECTS ===== */}
             <motion.div
@@ -86,7 +86,7 @@ export default function LoginPage() {
                     repeat: Infinity,
                     ease: "easeInOut"
                 }}
-                className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-gradient-to-br from-red-600/30 to-orange-600/20 rounded-full blur-[120px]"
+                className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-linear-to-br from-red-600/30 to-orange-600/20 rounded-full blur-[120px]"
             />
 
             <motion.div
@@ -100,7 +100,7 @@ export default function LoginPage() {
                     ease: "easeInOut",
                     delay: 1
                 }}
-                className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gradient-to-tl from-blue-600/20 to-purple-600/20 rounded-full blur-[120px]"
+                className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-linear-to-tl from-blue-600/20 to-purple-600/20 rounded-full blur-[120px]"
             />
 
             <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02]" />
@@ -125,14 +125,14 @@ export default function LoginPage() {
                         className="inline-flex relative mb-4"
                     >
                         <div className="absolute inset-0 bg-red-600 rounded-2xl blur-2xl opacity-40 animate-pulse" />
-                        <div className="relative p-5 rounded-2xl bg-gradient-to-br from-red-600 via-red-600 to-red-700 shadow-2xl shadow-red-600/30 border border-red-500/30">
+                        <div className="relative p-5 rounded-2xl bg-linear-to-br from-red-600 via-red-600 to-red-700 shadow-2xl shadow-red-600/30 border border-red-500/30">
                             <Shield size={48} className="text-white drop-shadow-2xl" strokeWidth={2.5} />
                         </div>
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.5 }}
-                            className="absolute -bottom-2 -right-2 px-2.5 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-lg"
+                            className="absolute -bottom-2 -right-2 px-2.5 py-1 bg-linear-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-lg"
                         >
                             Admin
                         </motion.div>
@@ -144,7 +144,7 @@ export default function LoginPage() {
                         transition={{ delay: 0.3 }}
                         className="text-4xl font-bold tracking-tight mb-2"
                     >
-                        <span className="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+                        <span className="bg-linear-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
                             KIN-ALERT
                         </span>
                     </motion.h1>
@@ -169,7 +169,7 @@ export default function LoginPage() {
                     transition={{ delay: 0.5 }}
                     className="relative bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 p-8 rounded-3xl shadow-2xl shadow-black/50"
                 >
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* MESSAGES D'ERREUR */}
@@ -197,7 +197,7 @@ export default function LoginPage() {
                                             repeat: Infinity,
                                             ease: "linear"
                                         }}
-                                        className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/10 to-transparent"
+                                        className="absolute inset-0 bg-linear-to-r from-transparent via-red-500/10 to-transparent"
                                     />
                                     <div className="relative bg-red-500/10 backdrop-blur-sm border border-red-500/30 p-4 rounded-xl flex items-start gap-3">
                                         <div className="relative">

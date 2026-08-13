@@ -143,7 +143,7 @@ export default function DashboardPage() {
                 {/* Glow background au hover */}
                 <div className={`
                 absolute inset-0 
-                bg-gradient-to-r from-transparent via-white/5 to-transparent 
+                bg-linear-to-r from-transparent via-white/5 to-transparent 
                 opacity-0 group-hover:opacity-100 
                 rounded-xl 
                 transition-opacity duration-500
@@ -215,7 +215,22 @@ export default function DashboardPage() {
         );
     };
 
+    // Déclare cette fonction dans ton composant DashboardPage
+    const handleRefresh = () => {
+        setLoading(true);
 
+        // Si tu utilises router.refresh() de Next.js ou une fonction fetch :
+        // router.refresh();
+
+        // Simule le temps de rechargement si nécessaire
+        setTimeout(() => {
+            setLoading(false);
+        }, 1000);
+    };
+
+
+
+    
 
     return (
         <motion.div
@@ -229,15 +244,15 @@ export default function DashboardPage() {
     - Glow effects
     - Icons dynamiques par type
 ======================================== */}
-            <div className="relative bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-y border-slate-800/50 overflow-hidden">
+            <div className="relative bg-linear-to-r from-slate-950 via-slate-900 to-slate-950 border-y border-slate-800/50 overflow-hidden">
                 {/* Gradient overlay gauche */}
-                <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-slate-900 to-transparent z-10 pointer-events-none" />
+                <div className="absolute left-0 top-0 bottom-0 w-32 bg-linear-to-r from-slate-900 to-transparent z-10 pointer-events-none" />
 
                 {/* Gradient overlay droite */}
-                <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-900 to-transparent z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-32 bg-linear-to-l from-slate-900 to-transparent z-10 pointer-events-none" />
 
                 {/* Ligne décorative top */}
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
+                <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-red-500/50 to-transparent" />
 
                 {/* Container du ticker */}
                 <div className="relative py-3.5 flex">
@@ -387,7 +402,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Ligne décorative bottom */}
-                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-red-500/50 to-transparent" />
             </div>
 
             {/* ========================================
@@ -418,11 +433,11 @@ export default function DashboardPage() {
                         transition={{ delay: 0.2 }}
                         className="text-4xl font-bold tracking-tight"
                     >
-                        <span className="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+                        <span className="bg-linear-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
                             KIN-ALERT
                         </span>
                         {" "}
-                        <span className="bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+                        <span className="bg-linear-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
                             Live
                         </span>
                     </motion.h1>
@@ -452,13 +467,13 @@ export default function DashboardPage() {
                     {/* Badge Stats Principal */}
                     <div className="relative group">
                         {/* Glow effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl blur-lg opacity-20 group-hover:opacity-30 transition-opacity" />
+                        <div className="absolute inset-0 bg-linear-to-r from-emerald-600 to-green-600 rounded-2xl blur-lg opacity-20 group-hover:opacity-30 transition-opacity" />
 
                         {/* Container */}
                         <div className="
                 relative
                 flex items-center gap-3
-                bg-gradient-to-r from-emerald-500/10 to-green-500/10
+                bg-linear-to-r from-emerald-500/10 to-green-500/10
                 hover:from-emerald-500/20 hover:to-green-500/20
                 backdrop-blur-sm
                 px-5 py-3
@@ -506,27 +521,34 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Badge secondaire (optionnel) */}
-                    <motion.div
+                    {/* Badge secondaire (Bouton de rafraîchissement) */}
+                    <motion.button
                         whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleRefresh}
+                        disabled={loading}
                         className="
-                p-3
-                bg-slate-800/50
-                hover:bg-slate-800/80
-                backdrop-blur-sm
-                rounded-xl
-                border border-slate-700/50
-                hover:border-slate-600
-                transition-all duration-300
-                cursor-pointer
-                group
-            "
+        p-3
+        bg-slate-800/50
+        hover:bg-slate-800/80
+        backdrop-blur-sm
+        rounded-xl
+        border border-slate-700/50
+        hover:border-slate-600
+        transition-all duration-300
+        cursor-pointer
+        group
+        disabled:opacity-50
+    "
                     >
                         <RefreshCw
                             size={18}
-                            className="text-slate-400 group-hover:text-white transition-colors group-hover:rotate-180 duration-500"
+                            className={`text-slate-400 group-hover:text-white transition-colors ${loading
+                                    ? "animate-spin text-white"
+                                    : "group-hover:rotate-180 duration-500"
+                                }`}
                         />
-                    </motion.div>
+                    </motion.button>
                 </motion.div>
             </motion.div>
 
@@ -545,13 +567,13 @@ export default function DashboardPage() {
                 <StatCard title="Citoyens" value={data?.stats.users_total} icon={<Users className="text-blue-500" />} color="border-blue-500" />
 
                 {/* Case vide ou Carte de bienvenue pour équilibrer la grille sur PC */}
-                <div className="hidden lg:flex p-6 rounded-[2rem] bg-gradient-to-br from-red-600 to-red-800 text-white items-center justify-center text-center">
+                <div className="hidden lg:flex p-6 rounded-4xl bg-linear-to-br from-red-600 to-red-800 text-white items-center justify-center text-center">
                     <p className="font-bold">KIN-ALERT<br />Admin Panel v1.0</p>
                 </div>
             </div>
 
             {/* 3. GRAPHIQUE PRINCIPAL */}
-            <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+            <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 p-6 rounded-4xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-bold">Évolution des Incidents</h3>
                     <select className="bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm p-2 outline-none">
@@ -563,7 +585,7 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* 4. TOP COMMUNES */}
-                <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 p-8 rounded-4xl border border-slate-200 dark:border-slate-800 shadow-sm">
                     <h3 className="text-lg font-bold mb-8 flex items-center gap-2"><MapPin className="text-red-500" /> Communes les plus actives</h3>
                     <div className="space-y-6">
                         {(data?.charts.top_communes ?? []).map((commune: { nom: string, total: number }, index: number) => (
@@ -577,7 +599,7 @@ export default function DashboardPage() {
                                         initial={{ width: 0 }}
                                         animate={{ width: `${(commune.total / (data?.charts.top_communes[0]?.total || 1)) * 100}%` }}
                                         transition={{ duration: 1, ease: "circOut" }}
-                                        className="h-full bg-gradient-to-r from-red-600 to-orange-500 rounded-full"
+                                        className="h-full bg-linear-to-r from-red-600 to-orange-500 rounded-full"
                                     />
                                 </div>
                             </div>
@@ -586,7 +608,7 @@ export default function DashboardPage() {
                 </motion.div>
 
                 {/* 5. RÉPARTITION PAR TYPE */}
-                <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 p-8 rounded-4xl border border-slate-200 dark:border-slate-800 shadow-sm">
                     <h3 className="text-lg font-bold mb-8 flex items-center gap-2"><BarChart3 className="text-blue-500" /> Nature des Incidents</h3>
                     <div className="grid grid-cols-2 gap-4">
                         {(data?.charts.incidents_by_type ?? []).slice(0, 6).map((type: { titre: string, total: number }, index: number) => (
@@ -626,7 +648,7 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
             className={`
                 relative overflow-hidden group
                 bg-white dark:bg-slate-900 
-                p-6 rounded-[2rem] border-2 border-transparent
+                p-6 rounded-4xl border-2 border-transparent
                 hover:border-${color.split('-')[1]}-500/50 
                 shadow-sm hover:shadow-xl hover:shadow-${color.split('-')[1]}-500/10
                 transition-all duration-300 flex items-center justify-between
@@ -634,7 +656,7 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
             `}
         >
             {/* Petit effet de reflet brillant en arrière-plan au survol */}
-            <div className="absolute -inset-x-full inset-y-0 z-0 w-1/2 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:animate-shine" />
+            <div className="absolute -inset-x-full inset-y-0 z-0 w-1/2 block transform -skew-x-12 bg-linear-to-r from-transparent via-white/10 to-transparent group-hover:animate-shine" />
 
             <div className="relative z-10">
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider">{title}</p>
