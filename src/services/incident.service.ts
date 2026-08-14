@@ -1,17 +1,21 @@
 import api from "@/lib/axios";
 import { Incident, IncidentStatus } from "@/types";
 
-// Explication du Prof : 
-// Laravel utilise le paramètre ?page=X. 
-// On passe un objet 'params' à Axios qui se chargera de construire l'URL.
 export const IncidentAdminService = {
-  getAllIncidents: async (page: number = 1) => {
-    const response = await api.get(`/admin/incidents?page=${page}`);
-    return response.data; // Retourne l'objet complet avec current_page, last_page, data, etc.
+  // Récupérer tous les incidents avec pagination et filtre par statut
+  getAllIncidents: async (page: number = 1, status?: string) => {
+    const params: Record<string, any> = { page };
+
+    // Si un filtre est sélectionné et qu'il ne s'agit pas de "all"
+    if (status && status !== "all") {
+      params.status = status; // ⚠️ Change en 'params.statut = status' si ton backend Laravel attend 'statut'
+    }
+
+    const response = await api.get("/admin/incidents", { params });
+    return response.data;
   },
 
   // Changer de force le statut d'un incident (Admin/Gestionnaire)
-  // Utilise PATCH /api/v1/admin/incidents/{id}/force-status
   updateStatus: async (id: number, status: IncidentStatus) => {
     const response = await api.patch(`/admin/incidents/${id}/force-status`, {
       status: status,

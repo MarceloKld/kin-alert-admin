@@ -107,13 +107,22 @@ export interface AuditLog {
 // ---------------------------------------------------------------------------
 // STATISTIQUES DASHBOARD ADMIN
 // ---------------------------------------------------------------------------
-export interface GlobalStats {
-  total_incidents: number;
-  incidents_valides: number;
-  incidents_en_attente: number;
-  incidents_rejetes?: number;
-  total_utilisateurs: number;
-  total_gestionnaires?: number;
+export interface DashboardStats {
+  incidents_total: number;
+  incidents_pending: number;
+  incidents_validated: number;
+  incidents_rejected: number;
+  incidents_deleted: number;
+}
+
+// On définit aussi le type pour la réponse paginée des incidents pour éviter d'autres erreurs
+export interface PaginatedResponse<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    from: number;
+    to: number;
 }
 
 
@@ -136,4 +145,24 @@ export interface DashboardData {
     top_communes: { nom: string; total: number }[]; // Déplacé ici
     users_growth: { month: string; total: number }[]; // Déplacé ici
   };
+  
+
 }
+
+
+// La structure globale du Dashboard
+export interface DashboardResponse {
+    stats: {
+        users_total: number;
+        gestionnaires_total: number;
+        incidents_total: number;
+        incidents_pending: number;
+        incidents_validated: number;
+        incidents_rejected: number;
+        incidents_deleted: number;
+    };
+    charts: any; // On met any pour ne pas s'embêter avec les graphiques ici
+}
+
+// Si GlobalStats est identique à DashboardStats :
+export type GlobalStats = DashboardStats;

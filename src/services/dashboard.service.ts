@@ -1,13 +1,15 @@
 import api from "@/lib/axios";
-import { DashboardData } from "@/types";
+import { DashboardResponse } from "@/types";
 
+/**
+ * Service pour récupérer les données complètes du Dashboard Global
+ * @returns {Promise<DashboardResponse>} - Retourne { stats: {...}, charts: {...} }
+ */
 export const DashboardService = {
-  getStats: async (): Promise<DashboardData> => {
+  getStats: async (): Promise<DashboardResponse> => {
     try {
       const response = await api.get("/admin/dashboard");
-      // Si Laravel utilise un Resource, les données sont dans response.data.data
-      // Si c'est un simple return response()->json(), c'est dans response.data
-      return response.data;
+      return response.data; // Renvoie l'objet global intact
     } catch (error) {
       console.error("Erreur Dashboard:", error);
       throw error;
