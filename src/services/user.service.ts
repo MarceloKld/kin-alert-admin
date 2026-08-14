@@ -32,4 +32,11 @@ export const UserAdminService = {
     const response = await api.delete(`/admin/users/${id}`);
     return response.data;
   },
+
+  createManager: async (data: any) => {
+    // Utilise l'endpoint POST /api/v1/admin/managers
+    const response = await api.post("/admin/managers", data);
+    return response.data;
+  },
+  
 };

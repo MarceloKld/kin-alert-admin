@@ -9,6 +9,8 @@ import { DashboardService } from '@/services/dashboard.service';
 import { useAuth } from '@/hooks/useAuth';
 import { Toast, ToastType } from '@/components/ui/Toast';
 import { IncidentSkeleton } from '@/components/ui/IncidentSkeleton';
+import { UserPlus } from 'lucide-react';
+import { CreateManagerModal } from "@/components/features/modals/CreateManagerModal";
 
 export default function UsersAdminPage() {
     const { isAdmin } = useAuth();
@@ -19,6 +21,8 @@ export default function UsersAdminPage() {
     const [search, setSearch] = useState("");
     const [toast, setToast] = useState<{ message: string, type: ToastType } | null>(null);
 
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
     // Protection Front-end : Si pas admin, on n'affiche rien
     if (!isAdmin) return <div className="p-20 text-center text-red-500 font-black uppercase tracking-widest">Accès Refusé - Réservé Admin</div>;
 
@@ -27,18 +31,29 @@ export default function UsersAdminPage() {
     }, [search]); // On recharge quand on tape dans la recherche
 
     const loadData = async () => {
-        setNavigating(true);
+        if (!users) setLoading(true);
+        else setNavigating(true);
+
         try {
             const uRes = await UserAdminService.getUsers(1, search);
-
-            // PROF : Si Laravel renvoie { data: { data: [...] } }, on simplifie
-            // On s'assure que 'users' a toujours la structure attendue
-            setUsers(uRes.data && Array.isArray(uRes.data.data) ? uRes.data : uRes);
-
             const sRes = await DashboardService.getStats();
+
+            // PROF : On détermine où se trouve la liste réelle des utilisateurs
+            // Cas 1 : Laravel renvoie { data: [...] } (Pagination)
+            // Cas 2 : Laravel renvoie [...] (Simple tableau)
+            let cleanUserData = [];
+            if (uRes.data && Array.isArray(uRes.data)) {
+                cleanUserData = uRes.data; // C'est un objet paginé
+            } else if (Array.isArray(uRes)) {
+                cleanUserData = uRes; // C'est un tableau direct
+            }
+
+            // On stocke un objet qui a toujours une clé 'data' pour le .map()
+            setUsers({ ...uRes, data: cleanUserData });
             setStats(sRes.stats || sRes);
+
         } catch (e) {
-            console.error("Erreur chargement utilisateurs", e);
+            console.error("Erreur:", e);
         } finally {
             setLoading(false);
             setNavigating(false);
@@ -72,6 +87,13 @@ export default function UsersAdminPage() {
                     </h2>
                     <div className="h-1 w-12 bg-blue-500 mt-2 rounded-full"></div>
                 </div>
+
+                <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 shadow-lg shadow-blue-900/20 transition-all active:scale-95"
+                >
+                    <UserPlus size={16} /> Ajouter un Gestionnaire
+                </button>
 
                 <div className="flex gap-4">
                     <div className="bg-[#151c2c] border border-slate-800 p-4 rounded-2xl flex items-center gap-4">
@@ -245,6 +267,14 @@ export default function UsersAdminPage() {
                                     </div>
                                 ))}
                             </div>
+                            <CreateManagerModal
+                                isOpen={isCreateModalOpen}
+                                onClose={() => setIsCreateModalOpen(false)}
+                                onSuccess={(msg: string) => {
+                                    setToast({ message: msg, type: 'success' });
+                                    loadData(); // Rafraîchir la liste
+                                }}
+                            />
                     </>
                 )}
             </div>
