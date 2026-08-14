@@ -197,7 +197,7 @@ export default function IncidentsPage() {
                 {/* VUE LISTE MOBILE (VISIBLE UNIQUEMENT SUR SMARTPHONE - block md:hidden) */}
                 <div className="block md:hidden divide-y divide-slate-800/40">
                     {data?.data.map((incident: any) => (
-                        <div key={incident.id} className="p-4 flex flex-col gap-4 active:bg-white/[0.02]">
+                        <div key={incident.id} className="p-4 flex flex-col gap-4 active:bg-white/2">
                             <div className="flex justify-between items-start">
                                 <div className="flex flex-col gap-1">
                                     <span className={`w-fit px-2 py-0.5 rounded text-[8px] font-black border uppercase ${incident.statut === 'en_attente' ? 'bg-amber-500/5 border-amber-500/20 text-amber-500' :
