@@ -19,6 +19,7 @@ import { AnimatePresence } from 'framer-motion';
 
 // 2. Import des icônes Lucide React (ajoutez ChevronRight)
 import { ChevronRight } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SidebarProps {
     isMobile?: boolean;
@@ -28,13 +29,14 @@ interface SidebarProps {
 export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
+    const { isAdmin } = useAuth(); // On récupère le statut Admin
 
     const menuItems = [
-        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-        { name: "Incidents", href: "/dashboard/incidents", icon: AlertTriangle },
-        { name: "Utilisateurs", href: "/dashboard/users", icon: Users },
-        { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
-        { name: "Paramètres", href: "/dashboard/settings", icon: Settings },
+        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["administrateur", "gestionnaire"] },
+        { name: "Incidents", href: "/dashboard/incidents", icon: AlertTriangle, roles: ["administrateur", "gestionnaire"] },
+        { name: "Utilisateurs", href: "/dashboard/users", icon: Users, roles: ["administrateur"] },
+        { name: "Notifications", href: "/dashboard/notifications", icon: Bell, roles: ["administrateur", "gestionnaire"] },
+        { name: "Paramètres", href: "/dashboard/settings", icon: Settings, roles: ["administrateur"] },
     ];
 
     const handleLogout = () => {
@@ -46,6 +48,12 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
         if (closeMenu) closeMenu();
         router.push("/login");
     };
+
+    // Filtrage : On ne garde que les liens autorisés pour le rôle actuel
+    const filteredMenu = menuItems.filter(item =>
+        isAdmin ? true : item.roles.includes('gestionnaire')
+    );
+    
 
     return (
         <aside
@@ -156,7 +164,7 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
     - Hover effects avec gradient
 ======================================== */}
             <nav className="relative flex-1 px-3 py-6 space-y-1.5 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-                {menuItems.map((item, index) => {
+                {filteredMenu.map((item, index) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
 
