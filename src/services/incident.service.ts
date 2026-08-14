@@ -34,4 +34,12 @@ export const IncidentAdminService = {
     const response = await api.get(`/admin/incidents/${id}/history`);
     return response.data;
   },
+
+  // 🔽 NOUVELLE MÉTHODE : Récupérer les commentaires d'un incident
+  getComments: async (incidentId: number) => {
+    // Note : utilise '/admin/incidents/...' si la route backend est dans le groupe admin
+    const response = await api.get(`/incidents/${incidentId}/comments`);
+    return response.data;
+  },
+  
 };
