@@ -22,38 +22,47 @@ export default function UsersAdminPage() {
     const [toast, setToast] = useState<{ message: string, type: ToastType } | null>(null);
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
     // Protection Front-end : Si pas admin, on n'affiche rien
     if (!isAdmin) return <div className="p-20 text-center text-red-500 font-black uppercase tracking-widest">Accès Refusé - Réservé Admin</div>;
 
+    // PROF : Un seul useEffect pour gérer la pagination ET la recherche
     useEffect(() => {
-        loadData();
-    }, [search]); // On recharge quand on tape dans la recherche
+        // Si on tape une recherche, on attend un peu (Debounce)
+        const delayDebounceFn = setTimeout(() => {
+            loadData();
+        }, 500);
 
+        return () => clearTimeout(delayDebounceFn);
+    }, [currentPage, search]); // Recharger si la page OU la recherche change
+
+    
     const loadData = async () => {
-        if (!users) setLoading(true);
-        else setNavigating(true);
+        // 1. Déclencher le chargement visuel
+        if (!users) setLoading(true); // Premier chargement (Skeleton complet)
+        else setNavigating(true);    // Navigation/Recherche (Overlay discret)
 
         try {
-            const uRes = await UserAdminService.getUsers(1, search);
-            const sRes = await DashboardService.getStats();
+            // 2. Lancer les deux appels en parallèle (Vitesse max)
+            const [uRes, sRes] = await Promise.all([
+                UserAdminService.getUsers(currentPage, search),
+                DashboardService.getStats()
+            ]);
 
-            // PROF : On détermine où se trouve la liste réelle des utilisateurs
-            // Cas 1 : Laravel renvoie { data: [...] } (Pagination)
-            // Cas 2 : Laravel renvoie [...] (Simple tableau)
-            let cleanUserData = [];
-            if (uRes.data && Array.isArray(uRes.data)) {
-                cleanUserData = uRes.data; // C'est un objet paginé
-            } else if (Array.isArray(uRes)) {
-                cleanUserData = uRes; // C'est un tableau direct
-            }
+            // 3. Gérer les statistiques (Le "Cœur" du problème)
+            // On vérifie si sRes contient la clé 'stats' comme vu précédemment
+            const cleanStats = sRes.stats ? sRes.stats : sRes;
+            setStats(cleanStats);
 
-            // On stocke un objet qui a toujours une clé 'data' pour le .map()
-            setUsers({ ...uRes, data: cleanUserData });
-            setStats(sRes.stats || sRes);
+            // 4. Gérer les utilisateurs
+            // On s'assure que 'users' a toujours une propriété 'data' qui est un tableau
+            const userData = uRes.data ? uRes : { data: uRes };
+            setUsers(userData);
 
         } catch (e) {
-            console.error("Erreur:", e);
+            console.error("Erreur de chargement des données:", e);
+            setToast({ message: "Erreur de synchronisation", type: "error" });
         } finally {
             setLoading(false);
             setNavigating(false);
@@ -74,8 +83,11 @@ export default function UsersAdminPage() {
             setToast({ message: "Erreur lors du changement de statut", type: 'error' });
         }
     };
-
+    // À placer juste avant le return du composant
+    console.log("ÉTAT ACTUEL USERS:", users);
+    console.log("RECHERCHE ENVOYÉE:", search);
     return (
+        
         <div className="p-4 md:p-8 bg-[#0b101a] min-h-screen text-slate-300">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 

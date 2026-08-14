@@ -4,8 +4,12 @@ import api from "@/lib/axios";
 export const UserAdminService = {
   // Récupérer tous les utilisateurs (Citoyens)
   getUsers: async (page: number = 1, search?: string) => {
-    const params = { page, search };
-    const response = await api.get("/admin/users", { params });
+    const response = await api.get("/admin/users", {
+      params: {
+        page: page,
+        search: search || undefined, // N'envoie le paramètre que s'il y a du texte
+      },
+    });
     return response.data;
   },
 
@@ -38,5 +42,4 @@ export const UserAdminService = {
     const response = await api.post("/admin/managers", data);
     return response.data;
   },
-  
 };
