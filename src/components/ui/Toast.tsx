@@ -1,0 +1,40 @@
+"use client";
+import React, { useEffect } from 'react';
+import { CheckCircle, XCircle, Loader2, X } from 'lucide-react';
+
+export type ToastType = 'success' | 'error' | 'loading';
+
+interface ToastProps {
+    message: string;
+    type: ToastType;
+    onClose: () => void;
+}
+
+export const Toast = ({ message, type, onClose }: ToastProps) => {
+    useEffect(() => {
+        if (type !== 'loading') {
+            const timer = setTimeout(onClose, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [type, onClose]);
+
+    const configs = {
+        loading: { icon: <Loader2 size={18} className="animate-spin" />, color: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-[#0f172a]' },
+        success: { icon: <CheckCircle size={18} />, color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-[#061a14]' },
+        error: { icon: <XCircle size={18} />, color: 'text-rose-400', border: 'border-rose-500/30', bg: 'bg-[#1a0606]' },
+    };
+
+    const config = configs[type];
+
+    return (
+        <div className={`fixed bottom-8 right-8 z-[100] flex items-center gap-4 px-5 py-4 rounded-2xl border shadow-2xl ${config.border} ${config.bg} animate-in slide-in-from-right-10 duration-300`}>
+            <span className={config.color}>{config.icon}</span>
+            <p className="text-[11px] font-bold text-slate-200 uppercase tracking-widest">{message}</p>
+            {type !== 'loading' && (
+                <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
+                    <X size={14} />
+                </button>
+            )}
+        </div>
+    );
+};
