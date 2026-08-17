@@ -12,10 +12,11 @@ interface ToastProps {
 
 export const Toast = ({ message, type, onClose }: ToastProps) => {
     useEffect(() => {
-        // Le chargement ne se ferme pas automatiquement, 
-        // les autres se ferment après 3 secondes.
         if (type !== 'loading') {
-            const timer = setTimeout(onClose, 3000);
+            // 5000ms (5s) pour les erreurs, 2000ms (2s) pour le succès
+            const duration = type === 'error' ? 9000 : 3000;
+
+            const timer = setTimeout(onClose, duration);
             return () => clearTimeout(timer);
         }
     }, [type, onClose]);

@@ -4,12 +4,15 @@
 export type UserRole = "utilisateur" | "gestionnaire" | "administrateur";
 export type UserStatus = "actif" | "inactif" | "suspendu";
 // src/types/index.ts
-export type IncidentStatus = "en_attente" | "valide" | "rejete" | "supprime";
+export type IncidentStatus = "en_attente" | "valide" | "rejete";
 
 // ---------------------------------------------------------------------------
 // ENTITÉS DE LA BASE DE DONNÉES
 // ---------------------------------------------------------------------------
 
+export interface ApiErrorResponse {
+  message: string;
+}
 
 // Définition pour les commentaires
 

@@ -13,6 +13,8 @@ import { toast, Toaster } from 'react-hot-toast';
 // Ajoute STORAGE_URL dans les accolades des imports existants
 import { STORAGE_URL } from '@/services/incident.service';
 import { Toast, ToastType } from '@/components/ui/Toast'; 
+import { AxiosError } from 'axios';
+import { ApiErrorResponse } from '@/types';
 
 export default function IncidentsPage() {
     // États
@@ -121,7 +123,7 @@ export default function IncidentsPage() {
     // Actions
     // 1. Mettre à jour handleAction pour accepter number | string
     const handleAction = async (id: string | number, action: string) => {
-        // 1. Afficher le toast de chargement immédiatement
+        // 1. Afficher le toast de chargement
         showToast("Traitement en cours...", 'loading');
 
         try {
@@ -131,11 +133,21 @@ export default function IncidentsPage() {
 
             // 2. Succès
             showToast("Opération réussie avec succès", 'success');
-            await loadData(); // Rafraîchir la liste
-        } catch (error: any) {
-            // 3. Erreur
-            const msg = error.response?.data?.message || "L'action a échoué";
-            showToast(msg, 'error');
+            await loadData();
+        } catch (error: unknown) {
+            // 3. Typage propre 'unknown' au lieu de 'any'
+            const axiosError = error as AxiosError<ApiErrorResponse>;
+
+            // Si le gestionnaire tente une action interdite (Code HTTP 403)
+            if (axiosError.response?.status === 403) {
+                showToast(
+                    "Action non autorisée : Vous n'avez pas les droits requis pour effectuer cette opération. Veuillez contacter l'administrateur.",
+                    'error'
+                );
+            } else {
+                const msg = axiosError.response?.data?.message || "L'action a échoué";
+                showToast(msg, 'error');
+            }
         }
     };
 
@@ -288,7 +300,7 @@ export default function IncidentsPage() {
                 </div>
 
                 {/* PAGINATION PREMIUM CORRIGÉE */}
-                <div className="flex items-center justify-between px-6 py-4 bg-[#0b0c10]/50 rounded-[2rem] border border-white/5">
+                <div className="flex items-center justify-between px-6 py-4 bg-[#0b0c10]/50 rounded-4xl border border-white/5">
                     <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">
                         Total : {meta.total} incidents
                     </span>

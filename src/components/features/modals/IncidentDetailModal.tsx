@@ -36,7 +36,7 @@ return (
         {/* 🖼️ LIGHTBOX (IMAGE EN GRAND) - DOIT ÊTRE EN HAUT DANS LE PORTAL/DOM */}
         {fullImage && (
             <div
-                className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 cursor-zoom-out animate-in fade-in zoom-in duration-300"
+                className="fixed inset-0 z-200 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 cursor-zoom-out animate-in fade-in zoom-in duration-300"
                 onClick={() => setFullImage(null)}
             >
                 <button className="absolute top-8 right-8 p-3 bg-white/10 hover:bg-red-500 rounded-full text-white transition-colors">
@@ -52,10 +52,10 @@ return (
 
         {/* 📦 MODAL PRINCIPAL */}
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-in fade-in duration-300">
-            <div className="bg-[#0b0c10] border border-white/10 w-full max-w-6xl max-h-[95vh] overflow-hidden rounded-[2rem] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+            <div className="bg-[#0b0c10] border border-white/10 w-full max-w-6xl max-h-[95vh] overflow-hidden rounded-4xl flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)]">
 
                 {/* Header de contrôle */}
-                <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/2">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-red-600/20 flex items-center justify-center border border-red-600/30">
                             <AlertCircle className="w-6 h-6 text-red-500" />
@@ -83,7 +83,7 @@ return (
                                     return (
                                         <div
                                             key={i}
-                                            className="group relative aspect-video rounded-[2rem] overflow-hidden bg-white/5 border border-white/10"
+                                            className="group relative aspect-video rounded-4xl overflow-hidden bg-white/5 border border-white/10"
                                         >
                                             <img src={url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Preuve" />
 
@@ -104,7 +104,7 @@ return (
                             </div>
 
                             {/* Description */}
-                            <div className="bg-white/[0.03] p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
+                            <div className="bg-white/3 p-8 rounded-4xl border border-white/5 relative overflow-hidden">
                                 <div className="absolute top-0 left-0 w-1 h-full bg-red-600"></div>
                                 <h3 className="text-red-500 text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2">
                                     <Info className="w-4 h-4" /> Rapport de situation
@@ -117,7 +117,7 @@ return (
                             {/* Bouton Localisation */}
                             <button
                                 onClick={openInGoogleMaps}
-                                className="w-full group py-6 bg-red-600 hover:bg-red-700 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-sm transition-all flex items-center justify-center gap-3 shadow-xl shadow-red-900/20 active:scale-[0.98]"
+                                className="w-full group py-6 bg-red-600 hover:bg-red-700 text-white rounded-4xl font-black uppercase tracking-[0.2em] text-sm transition-all flex items-center justify-center gap-3 shadow-xl shadow-red-900/20 active:scale-[0.98]"
                             >
                                 <MapPin className="w-5 h-5 group-hover:animate-bounce" />
                                 Déployer la localisation Maps
@@ -128,7 +128,7 @@ return (
                         {/* Colonne Droite : Métadonnées et Commentaires (4 cols) */}
                         <div className="lg:col-span-4 space-y-6">
                             {/* Carte Infos */}
-                            <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 space-y-6">
+                            <div className="bg-white/2 border border-white/5 rounded-4xl p-6 space-y-6">
                                 <div className="flex items-center justify-between">
                                     <StatusBadge status={incident.statut} />
                                     <span className="text-[10px] text-gray-600 font-bold">CONFIRMATIONS: {incident.nombre_confirmations}</span>
@@ -164,12 +164,12 @@ return (
                                 <h3 className="text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 px-2">
                                     <MessageSquare className="w-4 h-4" /> Discussion ({comments.length})
                                 </h3>
-                                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                                <div className="space-y-3 max-h-87.5 overflow-y-auto pr-2 custom-scrollbar">
                                     {loadingComments ? (
                                         <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-red-500" /></div>
                                     ) : comments.length > 0 ? (
                                         comments.map((c, i) => (
-                                            <div key={i} className="bg-white/[0.03] p-4 rounded-2xl border border-white/5 hover:border-red-500/20 transition-colors">
+                                            <div key={i} className="bg-white/3 p-4 rounded-2xl border border-white/5 hover:border-red-500/20 transition-colors">
                                                 <div className="flex justify-between items-center mb-1">
                                                     <span className="text-[10px] text-red-500 font-black uppercase">{c.utilisateur?.nom}</span>
                                                 </div>
@@ -177,7 +177,7 @@ return (
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="text-center py-10 bg-white/[0.01] rounded-[2rem] border border-dashed border-white/5 text-gray-600 text-[10px] uppercase font-bold tracking-widest">
+                                        <div className="text-center py-10 bg-white/1 rounded-4xl border border-dashed border-white/5 text-gray-600 text-[10px] uppercase font-bold tracking-widest">
                                             Aucune interaction
                                         </div>
                                     )}
