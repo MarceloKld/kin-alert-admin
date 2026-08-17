@@ -57,3 +57,5 @@ export const DeleteConfirmModal = ({ isOpen, userName, loading, onClose, onConfi
         </div>
     );
 };
+
+export default DeleteConfirmModal;
