@@ -3,7 +3,8 @@ import axios from 'axios';
 // 1. Creation de l'instance Axios personnalisee
 const api = axios.create({
   // Fallback sur l'URL locale si la variable d'environnement n'est pas encore definie
-  baseURL: "http://localhost:8000/api/v1",
+  // Remplacez la ligne 6 :
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
