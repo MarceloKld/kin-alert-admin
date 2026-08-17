@@ -1,35 +1,38 @@
+// src/components/ui/StatusBadge.tsx
 import React from 'react';
-import { IncidentStatus } from '@/types';
-
-// Explications du Prof :
-// Ce composant est "pur". Il prend un statut et retourne un design spécifique.
-// On utilise des classes Tailwind avec des opacités (bg-opacity-10) pour l'effet moderne.
+import { Circle, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 
 interface StatusBadgeProps {
-    status: IncidentStatus;
+    status: 'en_attente' | 'valide' | 'rejete';
 }
 
-export const StatusBadge = ({ status }: StatusBadgeProps) => {
+const StatusBadge = ({ status }: StatusBadgeProps) => {
     const configs = {
         en_attente: {
-            label: 'En attente',
-            classes: 'bg-amber-100 text-amber-700 border-amber-200',
+            color: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
+            icon: <AlertCircle className="w-3 h-3" />,
+            label: 'En attente'
         },
         valide: {
-            label: 'Validé',
-            classes: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+            color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+            icon: <CheckCircle2 className="w-3 h-3" />,
+            label: 'Validé'
         },
         rejete: {
-            label: 'Rejeté',
-            classes: 'bg-rose-100 text-rose-700 border-rose-200',
-        },
+            color: 'text-rose-400 bg-rose-400/10 border-rose-400/20',
+            icon: <XCircle className="w-3 h-3" />,
+            label: 'Rejeté'
+        }
     };
 
-    const config = configs[status] || configs.en_attente;
+    const config = configs[status];
 
     return (
-        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${config.classes} transition-all duration-300`}>
+        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border backdrop-blur-md text-[11px] font-medium uppercase tracking-wider ${config.color}`}>
+            {config.icon}
             {config.label}
-        </span>
+        </div>
     );
 };
+
+export default StatusBadge;

@@ -1,271 +1,331 @@
-"use client"; // Indique à Next.js que ce composant utilise du state (côté client)
+"use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-    Eye, CheckCircle, XCircle, ChevronLeft, ChevronRight,
-    Activity, LayoutGrid, Clock, ShieldCheck, ShieldAlert, Trash2, Loader2, ImageIcon
-} from 'lucide-react'; // Importation des icônes SVG premium
-
-// Importation de nos services de communication avec Laravel
-import { IncidentAdminService } from '@/services/incident.service';
-import { DashboardService } from '@/services/dashboard.service';
-
-// Importation des composants UI
-import { IncidentDetailModal } from '@/components/features/modals/IncidentDetailModal';
-import { IncidentSkeleton } from '@/components/ui/IncidentSkeleton';
-import { Toast, ToastType } from '@/components/ui/Toast';
-import { DashboardStats } from "@/types";
-import { MapPin } from 'lucide-react';
+    Search, Filter, CheckCircle, XCircle, Trash2,
+    RefreshCcw, ChevronLeft, ChevronRight, Eye, AlertTriangle, MapPin
+} from 'lucide-react';
+import { IncidentService } from '@/services/incident.service';
+import { Incident } from '@/types';
+import StatusBadge from '@/components/ui/StatusBadge';
+import IncidentDetailModal from '@/components/features/modals/IncidentDetailModal';
+import { toast, Toaster } from 'react-hot-toast';
+// Ajoute STORAGE_URL dans les accolades des imports existants
+import { STORAGE_URL } from '@/services/incident.service';
+import { Toast, ToastType } from '@/components/ui/Toast'; 
 
 export default function IncidentsPage() {
-    // --- ÉTATS (STATES) ---
-    const [data, setData] = useState<any>(null); // Stocke les incidents paginés
-    const [stats, setStats] = useState<any>(null); // Stocke les chiffres du dashboard (37, 19, etc.)
-    const [loading, setLoading] = useState(true); // État de chargement initial
-    const [navigating, setNavigating] = useState(false); // État de chargement des boutons page/filtre
-    const [activeFilter, setActiveFilter] = useState<string>('all'); // Filtre sélectionné
-    const [currentPage, setCurrentPage] = useState(1); // Page actuelle
+    // États
+    const [incidents, setIncidents] = useState<Incident[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [meta, setMeta] = useState({ current_page: 1, last_page: 1, total: 0 });
 
-    // États pour le Modal et le Toast
-    const [selectedIncident, setSelectedIncident] = useState<any>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [toast, setToast] = useState<{ message: string, type: ToastType } | null>(null);
+    // Filtres
+    const [statusFilter, setStatusFilter] = useState('tous');
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false); // CHARGEMENT PREMIUM POUR ACTIONS
+    const [currentPage, setCurrentPage] = useState(1);
 
-    // --- LOGIQUE DE CHARGEMENT ---
 
-    // useEffect : S'exécute au chargement et chaque fois que la page ou le filtre change
-    useEffect(() => {
-        loadAllData();
-    }, [currentPage, activeFilter]);
 
-    // Dans ton fichier page.tsx
 
-    // Dans loadAllData
-    const loadAllData = async () => {
-        setNavigating(true);
-        try {
-            const [dashboardRes, incidentRes] = await Promise.all([
-                DashboardService.getStats(),
-                IncidentAdminService.getAllIncidents(currentPage, activeFilter)
-            ]);
 
-            // PROF : Voilà le secret ! 
-            // Ton debug montre que les chiffres sont dans dashboardRes.stats
-            if (dashboardRes && dashboardRes.stats) {
-                setStats(dashboardRes.stats);
+    // Typage correct pour éviter le rouge sur 'any'
+    interface ApiError {
+        response?: {
+            data?: {
+                message?: string;
             }
+        }
+    }
 
-            setData(incidentRes);
+    // ÉTAT DU TOAST PERSONNALISÉ
+    const [toastConfig, setToastConfig] = useState<{ show: boolean, message: string, type: ToastType }>({
+        show: false,
+        message: '',
+        type: 'loading'
+    });
+
+    const showToast = (message: string, type: ToastType) => {
+        setToastConfig({ show: true, message, type });
+    };
+
+    const hideToast = () => setToastConfig(prev => ({ ...prev, show: false }));
+
+
+
+
+    // 3. FONCTION DE CHARGEMENT (Stabilisée avec useCallback)
+    // Elle ne dépend plus de loadData(1) mais de l'état currentPage
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        try {
+            // Note : On utilise 'statut' car c'est ce que ton Postman attend
+            const res = await IncidentService.getAll(currentPage, statusFilter, searchTerm);
+            setIncidents(res.data);
+            setMeta({
+                current_page: res.meta.current_page,
+                last_page: res.meta.last_page,
+                total: res.meta.total
+            });
         } catch (error) {
-            showToast("Erreur de synchronisation", "error");
+            console.error("Erreur API:", error);
+            toast.error("Impossible de charger les données");
         } finally {
             setLoading(false);
-            setNavigating(false);
         }
-    };
+    }, [currentPage, statusFilter, searchTerm]); // Se recharge uniquement si l'un d'eux change
 
-    // Fonction pour afficher une notification propre
-    const showToast = (message: string, type: ToastType) => {
-        setToast({ message, type });
-    };
 
-    // Fonction de modération (Valider / Rejeter)
-    const handleAction = async (id: number, status: 'valide' | 'rejete') => {
-        showToast("Mise à jour en cours...", "loading");
+    // Fonction de chargement stable avec useCallback
+    // 1. Stabiliser loadData avec useCallback
+    const loadData = useCallback(async () => {
         try {
-            await IncidentAdminService.updateStatus(id, status);
-            showToast("Statut mis à jour avec succès", "success");
-            loadAllData(); // On rafraîchit tout pour mettre à jour les compteurs et la liste
-        } catch (error: any) {
-            showToast("Erreur : Action non autorisée", "error");
+            // Note: On utilise 'status' (anglais) pour ton backend Laravel
+            const res = await IncidentService.getAll(currentPage, statusFilter, searchTerm);
+            setIncidents(res.data);
+            setMeta({
+                current_page: res.meta.current_page,
+                last_page: res.meta.last_page,
+                total: res.meta.total
+            });
+        } catch (error) {
+            showToast("Erreur de connexion serveur", 'error');
+        } finally {
+            setLoading(false);
+        }
+    }, [currentPage, statusFilter, searchTerm]);
+    
+
+
+    // 4. L'EFFET UNIQUE (Propre et sans erreur de cascade)
+    useEffect(() => {
+        Promise.resolve().then(() => {
+            fetchData();
+        });
+    }, [fetchData]);
+
+    // 5. GESTIONNAIRES D'ÉVÉNEMENTS
+
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= meta.last_page) {
+            setCurrentPage(newPage);
+            // La vibration premium
+            if (window.navigator.vibrate) window.navigator.vibrate(10);
         }
     };
 
-    // Si c'est le premier chargement, on affiche le squelette animé
-    if (loading) return <div className="p-8 bg-[#0b101a] min-h-screen"><IncidentSkeleton /></div>;
+    // Actions
+    // Actions
+    // 1. Mettre à jour handleAction pour accepter number | string
+    const handleAction = async (id: string | number, action: string) => {
+        // 1. Afficher le toast de chargement immédiatement
+        showToast("Traitement en cours...", 'loading');
+
+        try {
+            if (action === 'delete') await IncidentService.delete(id);
+            else if (action === 'restore') await IncidentService.restore(id);
+            else await IncidentService.forceStatus(id, action);
+
+            // 2. Succès
+            showToast("Opération réussie avec succès", 'success');
+            await loadData(); // Rafraîchir la liste
+        } catch (error: any) {
+            // 3. Erreur
+            const msg = error.response?.data?.message || "L'action a échoué";
+            showToast(msg, 'error');
+        }
+    };
+
 
     return (
-        <div className="p-4 md:p-8 bg-[#0b101a] min-h-screen text-slate-300">
-            {/* Système de notification flottant */}
-            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+        <div className="p-6 space-y-6">
+            {/* AFFICHAGE DU TOAST */}
+            {toastConfig.show && (
+                <Toast
+                    message={toastConfig.message}
+                    type={toastConfig.type}
+                    onClose={hideToast}
+                />
+            )}
 
-            {/* TITRE DE LA PAGE */}
-            <div className="mb-6 md:mb-10 flex flex-col gap-2">
-
-                
-                <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
-                    <Activity className="text-red-600 animate-pulse" size={20} />
-                    Kin-Alert Ops Center
-                </h2>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-1">Supervision des incidents urbains</p>
-            </div>
-
-            {/* --- FILTRES : 2 colonnes sur mobile, 5 sur PC --- */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
-                {[
-                    { id: 'all', label: 'Total', key: 'incidents_total', icon: LayoutGrid, color: 'blue' },
-                    { id: 'en_attente', label: 'Attente', key: 'incidents_pending', icon: Clock, color: 'amber' },
-                    { id: 'valide', label: 'Validés', key: 'incidents_validated', icon: ShieldCheck, color: 'emerald' },
-                    { id: 'rejete', label: 'Rejetés', key: 'incidents_rejected', icon: ShieldAlert, color: 'rose' },
-                    { id: 'supprime', label: 'Suppr.', key: 'incidents_deleted', icon: Trash2, color: 'slate' },
-                ].map((item) => {
-                    const countValue = stats ? (stats as any)[item.key] : 0;
-                    const isActive = activeFilter === item.id;
-
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => { setActiveFilter(item.id); setCurrentPage(1); }}
-                            className={`p-3 md:p-4 rounded-2xl border transition-all duration-300 flex items-center md:flex-col md:items-start gap-3 md:gap-2
-                ${isActive ? `bg-${item.color}-500/10 border-${item.color}-500/50 shadow-lg` : 'bg-[#151c2c] border-slate-800'}`}
-                        >
-                            <div className={`p-2 rounded-lg ${isActive ? `bg-${item.color}-500/20 text-${item.color}-500` : 'bg-slate-900 text-slate-500'}`}>
-                                <item.icon size={16} />
-                            </div>
-                            <div className="text-left">
-                                <p className="text-[8px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">{item.label}</p>
-                                <p className="text-sm md:text-xl font-black text-white leading-none">{countValue}</p>
-                            </div>
-                        </button>
-                    );
-                })}
-            </div>
-
-            
-            {/* --- TABLEAU DES INCIDENTS --- */}
-            <div className="bg-[#151c2c] border border-slate-800/60 rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden">
-                <table className="hidden md:table w-full text-left">
-                    <thead className="bg-[#0f172a]/80 border-b border-slate-800 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                        <tr>
-                            <th className="px-6 py-5">Incident</th>
-                            <th className="px-6 py-5">Média</th>
-                            <th className="px-6 py-5">Zone</th>
-                            <th className="px-6 py-5 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/40">
-                        {data?.data.map((incident: any) => (
-                            <tr key={incident.id} className="group hover:bg-white/2 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-bold text-slate-200 group-hover:text-red-500 transition-colors uppercase">{incident.titre}</span>
-                                        <span className="text-[10px] font-mono text-slate-500">{incident.date_creation}</span>
-                                    </div>
-                                </td>
-
-                                {/* Visualisation Photo : miniature avec badge du nombre de photos */}
-                                <td className="px-6 py-4">
-                                    {incident.preuves && incident.preuves.length > 0 ? (
-                                        <div className="relative w-12 h-9 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 group/thumb">
-                                            <img src={incident.preuves[0].url} className="w-full h-full object-cover transition-transform group-hover/thumb:scale-110" />
-                                            {incident.preuves.length > 1 && (
-                                                <div className="absolute top-0 right-0 bg-red-600 text-[8px] font-bold px-1 text-white">+{incident.preuves.length - 1}</div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="w-12 h-9 rounded-lg border border-slate-800 flex items-center justify-center text-slate-700"><ImageIcon size={14} /></div>
-                                    )}
-                                </td>
-
-                                <td className="px-6 py-4">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-bold text-slate-300">{incident.commune?.nom}</span>
-                                        <span className="text-[9px] text-slate-500 uppercase">{incident.avenue}</span>
-                                    </div>
-                                </td>
-
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 py-0.5 rounded text-[9px] font-black border uppercase ${incident.statut === 'en_attente' ? 'bg-amber-500/5 border-amber-500/20 text-amber-500' :
-                                            incident.statut === 'valide' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500' : 'bg-rose-500/5 border-rose-500/20 text-rose-500'
-                                        }`}>
-                                        {incident.statut.replace('_', ' ')}
-                                    </span>
-                                </td>
-
-                                <td className="px-6 py-4">
-                                    <div className="flex justify-end gap-2">
-                                        <button onClick={() => { setSelectedIncident(incident); setIsModalOpen(true); }} className="p-2 hover:bg-slate-800 rounded-xl text-slate-400"><Eye size={16} /></button>
-                                        <button onClick={() => handleAction(incident.id, 'valide')} className="p-2 hover:bg-emerald-500/20 rounded-xl text-emerald-500"><CheckCircle size={16} /></button>
-                                        <button onClick={() => handleAction(incident.id, 'rejete')} className="p-2 hover:bg-rose-500/20 rounded-xl text-rose-500"><XCircle size={16} /></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-
-                {/* VUE LISTE MOBILE (VISIBLE UNIQUEMENT SUR SMARTPHONE - block md:hidden) */}
-                <div className="block md:hidden divide-y divide-slate-800/40">
-                    {data?.data.map((incident: any) => (
-                        <div key={incident.id} className="p-4 flex flex-col gap-4 active:bg-white/2">
-                            <div className="flex justify-between items-start">
-                                <div className="flex flex-col gap-1">
-                                    <span className={`w-fit px-2 py-0.5 rounded text-[8px] font-black border uppercase ${incident.statut === 'en_attente' ? 'bg-amber-500/5 border-amber-500/20 text-amber-500' :
-                                            incident.statut === 'valide' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500' : 'bg-rose-500/5 border-rose-500/20 text-rose-500'
-                                        }`}>
-                                        {incident.statut}
-                                    </span>
-                                    <span className="text-sm font-bold text-slate-200 uppercase">{incident.titre}</span>
-                                    <span className="text-[9px] font-mono text-slate-500">{incident.date_creation}</span>
-                                </div>
-                                {/* Miniature Photo Mobile */}
-                                {incident.preuves?.[0] && (
-                                    <img src={incident.preuves[0].url} className="w-12 h-12 rounded-lg object-cover border border-slate-700" />
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                                    <MapPin size={10} className="inline mr-1" /> {incident.commune?.nom}
-                                </span>
-                                <div className="flex gap-2">
-                                    <button onClick={() => { setSelectedIncident(incident); setIsModalOpen(true); }} className="p-2 bg-slate-800 rounded-lg text-slate-400"><Eye size={16} /></button>
-                                    <button onClick={() => handleAction(incident.id, 'valide')} className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500"><CheckCircle size={16} /></button>
-                                    <button onClick={() => handleAction(incident.id, 'rejete')} className="p-2 bg-rose-500/10 rounded-lg text-rose-500"><XCircle size={16} /></button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+            {/* Header & Filtres */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-white tracking-tight italic">KIN-ALERT <span className="text-red-600">MODÉRATION</span></h1>
+                    <p className="text-gray-500 text-sm italic">Gestion du flux des incidents en temps réel.</p>
                 </div>
 
-
-
-
-
-
-                {/* --- PAGINATION (DESIGN SCREENSHOT) --- */}
-                <div className="px-4 md:px-6 py-6 bg-[#0f172a] border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="hidden md:block">
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                            {data?.from}-{data?.to} de {data?.total} entrées
-                        </span>
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Recherche */}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                            type="text"
+                            placeholder="Rechercher..."
+                            className="bg-[#0f1117] border border-white/5 rounded-xl py-2 pl-10 pr-4 text-sm text-white w-64 focus:ring-1 focus:ring-red-500 transition-all"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
+
+                    {/* Filtre Statut */}
+                    <select
+                        className="bg-[#0f1117] border border-white/5 rounded-xl py-2 px-4 text-sm text-gray-300 focus:ring-1 focus:ring-red-500 outline-none"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                        <option value="tous">Tous les statuts</option>
+                        <option value="en_attente">En attente</option>
+                        <option value="valide">Validés</option>
+                        <option value="rejete">Rejetés</option>
+                    </select>
+                </div>
+            </div>
+
+            {/* Table Section */}
+            <div className="bg-[#0f1117]/50 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b border-white/5 bg-white/2 text-xs uppercase tracking-widest text-gray-500">
+                                <th className="p-5 font-semibold">Incident</th>
+                                <th className="p-5 font-semibold">Localisation</th>
+                                <th className="p-5 font-semibold text-center">Confirmations</th>
+                                <th className="p-5 font-semibold">Statut</th>
+                                <th className="p-5 font-semibold text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {loading ? (
+                                // SKELETON LOADERS
+                                [...Array(5)].map((_, i) => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td colSpan={5} className="p-10">
+                                            <div className="h-4 bg-white/5 rounded w-3/4 mb-2"></div>
+                                            <div className="h-3 bg-white/5 rounded w-1/2"></div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                incidents.map((incident) => (
+                                    <tr key={incident.id} className="group hover:bg-white/1 transition-all">
+                                        <td className="p-5">
+                                            <div className="flex items-center gap-3">
+                                                {/* Mini Thumbnail */}
+                                                <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 overflow-hidden shrink-0">
+                                                    {incident.preuves && incident.preuves.length > 0 ? (
+                                                        <img
+                                                            src={`${STORAGE_URL}${incident.preuves[0].fichier}`}
+                                                            className="w-full h-full object-cover"
+                                                            alt="Thumbnail"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-[8px] text-gray-600 font-bold uppercase p-1 text-center">
+                                                            Pas d&apos;image
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-white group-hover:text-red-500 transition-colors uppercase">
+                                                        {incident.titre}
+                                                    </span>
+                                                    <span className="text-[10px] text-gray-500 font-medium">{incident.type_incident.titre}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-5">
+                                            <button
+                                                onClick={() => setSelectedIncident(incident)}
+                                                className="flex flex-col text-left group/loc"
+                                            >
+                                                <span className="text-xs text-gray-300 flex items-center gap-1 group-hover/loc:text-red-400">
+                                                    <MapPin className="w-3 h-3" /> {incident.commune.nom}
+                                                </span>
+                                                <span className="text-[10px] text-gray-600 italic underline">Cliquer pour voir les détails</span>
+                                            </button>
+                                        </td>
+                                        <td className="p-5 text-center">
+                                            <span className="px-3 py-1 rounded-full bg-red-500/5 text-red-500 border border-red-500/10 text-xs font-black">
+                                                {incident.nombre_confirmations}
+                                            </span>
+                                        </td>
+                                        <td className="p-5">
+                                            <StatusBadge status={incident.statut} />
+                                        </td>
+                                        <td className="p-5">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button onClick={() => setSelectedIncident(incident)} className="p-2 text-gray-400 hover:text-white transition-colors" title="Détails">
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+
+                                                {incident.deleted_at ? (
+                                                    <button onClick={() => handleAction(incident.id, 'restore')} className="p-2 text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all" title="Restaurer">
+                                                        <RefreshCcw className="w-4 h-4" />
+                                                    </button>
+                                                ) : (
+                                                    <>
+                                                        <button onClick={() => handleAction(incident.id, 'valide')} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all" title="Valider">
+                                                            <CheckCircle className="w-4 h-4" />
+                                                        </button>
+                                                        <button onClick={() => handleAction(incident.id, 'rejete')} className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-lg transition-all" title="Rejeter">
+                                                            <XCircle className="w-4 h-4" />
+                                                        </button>
+                                                        <button onClick={() => handleAction(incident.id, 'delete')} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all" title="Supprimer">
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* PAGINATION PREMIUM CORRIGÉE */}
+                <div className="flex items-center justify-between px-6 py-4 bg-[#0b0c10]/50 rounded-[2rem] border border-white/5">
+                    <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">
+                        Total : {meta.total} incidents
+                    </span>
 
                     <div className="flex items-center gap-4">
-                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Page {data?.current_page} / {data?.last_page}</span>
-                        <div className="flex gap-2">
-                            <button
-                                disabled={currentPage === 1 || navigating}
-                                onClick={() => setCurrentPage(p => p - 1)}
-                                className="px-5 py-2 bg-[#151c2c] border border-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-20 flex items-center gap-2 transition-all"
-                            >
-                                {navigating && currentPage !== 1 ? <Loader2 size={12} className="animate-spin" /> : <ChevronLeft size={12} />}
-                                Précédent
-                            </button>
-                            <button
-                                disabled={currentPage === data?.last_page || navigating}
-                                onClick={() => setCurrentPage(p => p + 1)}
-                                className="px-5 py-2 bg-[#151c2c] border border-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-20 flex items-center gap-2 transition-all"
-                            >
-                                Suivant
-                                {navigating && currentPage !== data?.last_page ? <Loader2 size={12} className="animate-spin" /> : <ChevronRight size={12} />}
-                            </button>
+                        <button
+                            disabled={currentPage === 1 || loading}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            className="p-3 rounded-xl bg-white/5 border border-white/5 text-white disabled:opacity-20 hover:bg-red-500/10 hover:text-red-500 transition-all"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-black text-red-500">{currentPage}</span>
+                            <span className="text-sm font-bold text-gray-600">/</span>
+                            <span className="text-sm font-bold text-gray-400">{meta.last_page}</span>
                         </div>
+
+                        <button
+                            disabled={currentPage === meta.last_page || loading}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            className="p-3 rounded-xl bg-white/5 border border-white/5 text-white disabled:opacity-20 hover:bg-red-500/10 hover:text-red-500 transition-all"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <IncidentDetailModal incident={selectedIncident} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            {/* Modal de Détails */}
+            {selectedIncident && (
+                <IncidentDetailModal
+                    incident={selectedIncident}
+                    onClose={() => setSelectedIncident(null)}
+                />
+            )}
         </div>
     );
 }

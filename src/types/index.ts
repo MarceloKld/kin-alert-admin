@@ -3,11 +3,26 @@
 // ---------------------------------------------------------------------------
 export type UserRole = "utilisateur" | "gestionnaire" | "administrateur";
 export type UserStatus = "actif" | "inactif" | "suspendu";
-export type IncidentStatus = "en_attente" | "valide" | "rejete";
+// src/types/index.ts
+export type IncidentStatus = "en_attente" | "valide" | "rejete" | "supprime";
 
 // ---------------------------------------------------------------------------
 // ENTITÉS DE LA BASE DE DONNÉES
 // ---------------------------------------------------------------------------
+
+
+// Définition pour les commentaires
+
+
+// Définition pour les erreurs API
+export interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    }
+  }
+}
+
 
 // Utilisateur
 export interface User {
@@ -48,36 +63,54 @@ export interface Preuve {
   type_fichier: string;
 }
 
+
+
+export interface Evidence {
+  id: string;
+  incident_id: string;
+  fichier: string; // URL de l'image
+  type_fichier: string;
+}
+
+
 // Incident (Complet selon BDD)
 export interface Incident {
   id: number;
   titre: string;
   description: string;
-  type_incident_id: number;
-  type_incident?: IncidentType;
-  latitude: number;
-  longitude: number;
-  commune_id: number;
-  commune?: Commune;
-  avenue?: string;
-  statut: IncidentStatus;
+  statut: "en_attente" | "valide" | "rejete";
   nombre_confirmations: number;
-  utilisateur_id: number;
-  utilisateur?: User;
+  latitude: string;
+  longitude: string;
+  avenue: string;
   date_creation: string;
-  preuves?: Preuve[];
+  deleted_at?: string | null;
+  utilisateur: {
+    id: number;
+    nom: string;
+    email: string;
+  };
+  commune: {
+    id: number;
+    nom: string;
+  };
+  type_incident: {
+    id: number;
+    titre: string;
+  };
+  preuves: { fichier: string }[];
   commentaires?: Commentaire[];
-  historique_statuts?: HistoriqueStatut[];
 }
 
 // Commentaires
 export interface Commentaire {
   id: number;
   contenu: string;
-  utilisateur_id: number;
-  utilisateur?: User;
-  incident_id: number;
   date_creation: string;
+  utilisateur?: {
+    nom: string;
+    role: string;
+  };
 }
 
 // Historique des statuts
@@ -117,12 +150,17 @@ export interface DashboardStats {
 
 // On définit aussi le type pour la réponse paginée des incidents pour éviter d'autres erreurs
 export interface PaginatedResponse<T> {
-    data: T[];
+  data: T[];
+  meta: {
     current_page: number;
     last_page: number;
     total: number;
-    from: number;
-    to: number;
+    per_page: number;
+  };
+  links: {
+    next: string | null;
+    prev: string | null;
+  };
 }
 
 
@@ -150,19 +188,3 @@ export interface DashboardData {
 }
 
 
-// La structure globale du Dashboard
-export interface DashboardResponse {
-    stats: {
-        users_total: number;
-        gestionnaires_total: number;
-        incidents_total: number;
-        incidents_pending: number;
-        incidents_validated: number;
-        incidents_rejected: number;
-        incidents_deleted: number;
-    };
-    charts: any; // On met any pour ne pas s'embêter avec les graphiques ici
-}
-
-// Si GlobalStats est identique à DashboardStats :
-export type GlobalStats = DashboardStats;

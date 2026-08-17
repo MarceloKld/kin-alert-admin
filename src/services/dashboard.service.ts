@@ -1,12 +1,12 @@
 import api from "@/lib/axios";
-import { DashboardResponse } from "@/types";
+import { DashboardData } from "@/types";
 
 /**
  * Service pour récupérer les données complètes du Dashboard Global
- * @returns {Promise<DashboardResponse>} - Retourne { stats: {...}, charts: {...} }
+ * @returns {Promise<DashboardData>} - Retourne { stats: {...}, charts: {...} }
  */
 export const DashboardService = {
-  getStats: async (): Promise<DashboardResponse> => {
+  getStats: async (): Promise<DashboardData> => {
     try {
       const response = await api.get("/admin/dashboard");
       return response.data; // Renvoie l'objet global intact
