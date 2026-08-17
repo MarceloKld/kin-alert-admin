@@ -1,45 +1,26 @@
 import api from "@/lib/axios";
+import { UserPaginatedResponse, User } from "@/types";
 
-// Explication Prof : Ce service centralise les privilèges d'administration des comptes
-export const UserAdminService = {
-  // Récupérer tous les utilisateurs (Citoyens)
-  getUsers: async (page: number = 1, search?: string) => {
-    const response = await api.get("/admin/users", {
-      params: {
-        page: page,
-        search: search || undefined, // N'envoie le paramètre que s'il y a du texte
-      },
+export const UserService = {
+  // On garde juste la recherche par texte pour l'instant
+  getAll: async (page: number = 1, search?: string) => {
+    const response = await api.get<UserPaginatedResponse>(`/admin/users`, {
+      params: { page, search: search || undefined },
     });
     return response.data;
   },
 
-  // Récupérer les gestionnaires (Équipe administrative)
-  getManagers: async () => {
-    const response = await api.get("/admin/managers");
-    return response.data;
-  },
+  suspend: async (id: number) =>
+    (await api.patch(`/admin/users/${id}/suspend`)).data,
+  activate: async (id: number) =>
+    (await api.patch(`/admin/users/${id}/activate`)).data,
+  delete: async (id: number) => (await api.delete(`/admin/users/${id}`)).data,
 
-  // Suspendre un compte (PATCH /api/v1/admin/users/{user}/suspend)
-  suspendUser: async (id: number) => {
-    const response = await api.patch(`/admin/users/${id}/suspend`);
-    return response.data;
-  },
-
-  // Activer un compte (PATCH /api/v1/admin/users/{user}/activate)
-  activateUser: async (id: number) => {
-    const response = await api.patch(`/admin/users/${id}/activate`);
-    return response.data;
-  },
-
-  // Supprimer définitivement un utilisateur
-  deleteUser: async (id: number) => {
-    const response = await api.delete(`/admin/users/${id}`);
-    return response.data;
-  },
-
-  createManager: async (data: any) => {
-    // Utilise l'endpoint POST /api/v1/admin/managers
-    const response = await api.post("/admin/managers", data);
-    return response.data;
-  },
+  // src/services/user.service.ts
+  createManager: async (data: {
+    nom: string;
+    email: string;
+    telephone: string;
+    password: string;
+  }) => (await api.post(`/admin/managers`, data)).data,
 };

@@ -1,111 +1,117 @@
 "use client";
 import React, { useState } from 'react';
-import { X, UserPlus, Mail, Lock, Phone, ShieldCheck, Loader2 } from 'lucide-react';
-import { UserAdminService } from '@/services/user.service';
+import { X, UserPlus, Mail, Phone, Lock, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { UserService } from '@/services/user.service';
+import { AxiosError } from 'axios';
+import { ApiErrorResponse } from '@/types';
 
-export const CreateManagerModal = ({ isOpen, onClose, onSuccess }: any) => {
-    // PROF : On utilise 'password' pour correspondre à ton test Postman qui marche
+interface Props {
+    onClose: () => void;
+    onSuccess: () => void;
+}
+
+export const CreateManagerModal = ({ onClose, onSuccess }: Props) => {
+    const [loading, setLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false); // Pour afficher/cacher le MDP
+
     const [formData, setFormData] = useState({
         nom: '',
         email: '',
         telephone: '',
-        password: '',
+        password: '' // Remplacement de mot_de_passe par password
     });
-
-    const [loading, setLoading] = useState(false);
-    const [validationErrors, setValidationErrors] = useState<any>(null); // Pour stocker les erreurs 422
-
-    if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setValidationErrors(null);
-
+        setErrorMsg(null);
         try {
-            // Envoi des données vers Laravel
-            await UserAdminService.createManager(formData);
-            onSuccess("Gestionnaire créé avec succès");
+            await UserService.createManager(formData);
+            onSuccess();
             onClose();
-        } catch (err: any) {
-            // PROF : Si c'est une erreur 422, Laravel renvoie un objet 'errors'
-            if (err.response?.status === 422) {
-                setValidationErrors(err.response.data.errors);
-            } else {
-                alert("Une erreur inattendue est survenue");
-            }
+        } catch (error) {
+            const axiosError = error as AxiosError<ApiErrorResponse>;
+            // Affiche l'erreur précise du validateur Laravel
+            setErrorMsg(axiosError.response?.data?.message || "Erreur de validation.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-[#0f172a] border border-slate-800 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-in fade-in duration-300">
+            <div className="bg-[#0b0c10] border border-white/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl">
 
-                <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <UserPlus className="text-blue-500" size={20} />
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest">Nouveau Gestionnaire</h3>
-                    </div>
-                    <button onClick={onClose} className="text-slate-500 hover:text-white"><X size={20} /></button>
+                {/* Header */}
+                <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                    <h2 className="text-xl font-black text-white uppercase italic tracking-widest">Nouveau Staff</h2>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors"><X size={24} /></button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-8 space-y-6 text-white">
+                    {errorMsg && (
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-500 text-xs font-bold">
+                            <AlertCircle size={16} /> {errorMsg}
+                        </div>
+                    )}
 
-                    {/* CHAMP NOM */}
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nom Complet</label>
-                        <input
-                            required
-                            type="text"
-                            className={`w-full bg-[#151c2c] border ${validationErrors?.nom ? 'border-red-500' : 'border-slate-800'} rounded-xl py-3 px-4 text-xs text-white outline-none`}
-                            onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-                        />
-                        {validationErrors?.nom && <p className="text-[9px] text-red-500 font-bold ml-1">{validationErrors.nom[0]}</p>}
-                    </div>
+                    <div className="space-y-4">
+                        {/* Champ Nom */}
+                        <div className="relative group">
+                            <UserPlus className="absolute left-4 top-4 w-4 h-4 text-gray-600 group-focus-within:text-red-500 transition-colors" />
+                            <input
+                                required type="text" placeholder="Nom complet (ex: Marc Kapinga)"
+                                className="w-full bg-[#050505] border border-white/5 rounded-2xl py-4 pl-12 text-sm focus:border-red-500 outline-none transition-all"
+                                onChange={e => setFormData({ ...formData, nom: e.target.value })}
+                            />
+                        </div>
 
-                    {/* CHAMP EMAIL */}
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email</label>
-                        <input
-                            required
-                            type="email"
-                            className={`w-full bg-[#151c2c] border ${validationErrors?.email ? 'border-red-500' : 'border-slate-800'} rounded-xl py-3 px-4 text-xs text-white outline-none`}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        />
-                        {validationErrors?.email && <p className="text-[9px] text-red-500 font-bold ml-1">{validationErrors.email[0]}</p>}
-                    </div>
+                        {/* Champ Email */}
+                        <div className="relative group">
+                            <Mail className="absolute left-4 top-4 w-4 h-4 text-gray-600 group-focus-within:text-red-500 transition-colors" />
+                            <input
+                                required type="email" placeholder="Email (ex: m.kapinga@alert.cd)"
+                                className="w-full bg-[#050505] border border-white/5 rounded-2xl py-4 pl-12 text-sm focus:border-red-500 outline-none transition-all"
+                                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                            />
+                        </div>
 
-                    {/* CHAMP TELEPHONE */}
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Téléphone</label>
-                        <input
-                            required
-                            type="text"
-                            className={`w-full bg-[#151c2c] border ${validationErrors?.telephone ? 'border-red-500' : 'border-slate-800'} rounded-xl py-3 px-4 text-xs text-white outline-none`}
-                            onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-                        />
-                    </div>
+                        {/* Champ Téléphone */}
+                        <div className="relative group">
+                            <Phone className="absolute left-4 top-4 w-4 h-4 text-gray-600 group-focus-within:text-red-500 transition-colors" />
+                            <input
+                                required type="text" placeholder="Téléphone (ex: +243812345678)"
+                                className="w-full bg-[#050505] border border-white/5 rounded-2xl py-4 pl-12 text-sm focus:border-red-500 outline-none transition-all"
+                                onChange={e => setFormData({ ...formData, telephone: e.target.value })}
+                            />
+                        </div>
 
-                    {/* CHAMP PASSWORD */}
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Mot de passe</label>
-                        <input
-                            required
-                            type="password"
-                            className={`w-full bg-[#151c2c] border ${validationErrors?.password ? 'border-red-500' : 'border-slate-800'} rounded-xl py-3 px-4 text-xs text-white outline-none`}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        />
+                        {/* ✅ NOUVEAU : Champ Mot de Passe */}
+                        <div className="relative group">
+                            <Lock className="absolute left-4 top-4 w-4 h-4 text-gray-600 group-focus-within:text-red-500 transition-colors" />
+                            <input
+                                required
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Définir un mot de passe"
+                                className="w-full bg-[#050505] border border-white/5 rounded-2xl py-4 pl-12 pr-12 text-sm focus:border-red-500 outline-none transition-all"
+                                onChange={e => setFormData({ ...formData, password: e.target.value })}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-4 text-gray-600 hover:text-white transition-colors"
+                            >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
                     </div>
 
                     <button
                         disabled={loading}
-                        type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[10px] py-4 rounded-xl transition-all flex items-center justify-center gap-2"
+                        className="w-full py-5 bg-red-600 hover:bg-red-700 disabled:bg-gray-800 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95"
                     >
-                        {loading ? <Loader2 className="animate-spin" size={16} /> : <ShieldCheck size={16} />}
-                        CRÉER LE COMPTE
+                        {loading ? <Loader2 className="animate-spin" size={16} /> : "Créer le compte gestionnaire"}
                     </button>
                 </form>
             </div>

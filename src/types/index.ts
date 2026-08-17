@@ -5,6 +5,7 @@ export type UserRole = "utilisateur" | "gestionnaire" | "administrateur";
 export type UserStatus = "actif" | "inactif" | "suspendu";
 // src/types/index.ts
 export type IncidentStatus = "en_attente" | "valide" | "rejete";
+export type ToastType = 'success' | 'error' | 'loading'; // ✅ BIEN EXPORTÉ ICI
 
 // ---------------------------------------------------------------------------
 // ENTITÉS DE LA BASE DE DONNÉES
@@ -36,6 +37,20 @@ export interface User {
   role: UserRole;
   statut: UserStatus;
   date_creation: string;
+}
+
+export interface UserPaginatedResponse {
+  current_page: number;
+  data: User[];
+  last_page: number;
+  total: number;
+  per_page: number;
+  from: number;
+  to: number;
+}
+
+export interface ApiErrorResponse {
+  message: string;
 }
 
 // Type d'Incident
@@ -159,6 +174,9 @@ export interface PaginatedResponse<T> {
     last_page: number;
     total: number;
     per_page: number;
+    // On ajoute les autres champs si nécessaire
+    from: number;
+    to: number;
   };
   links: {
     next: string | null;
