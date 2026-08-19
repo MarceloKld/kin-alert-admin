@@ -76,38 +76,41 @@ return (
                         {/* Colonne Gauche : Preuves et Description (8 cols) */}
                         <div className="lg:col-span-8 space-y-8">
                             {/* Galerie Photos */}
-                      
                             <div className="grid grid-cols-2 gap-4">
                                 {incident.preuves.map((p, i) => {
-                                    // 1. On récupère la base URL (ex: http://localhost:8000/storage/)
+                                    // 1. Déterminer la base URL (Local ou Prod)
+                                    // On donne la priorité à la variable d'environnement, sinon on utilise la constante importée
                                     let baseUrl = process.env.NEXT_PUBLIC_STORAGE_URL || STORAGE_URL;
 
-                                    // 2. On s'assure qu'elle finit par un seul /
+                                    // 2. Sécurité : S'assurer que la base finit par un seul "/"
                                     if (!baseUrl.endsWith('/')) baseUrl += '/';
 
-                                    // 3. On nettoie le chemin du fichier (on enlève le / au début s'il existe)
-                                    const filePath = p.fichier.startsWith('/') ? p.fichier.substring(1) : p.fichier;
+                                    // 3. Nettoyer le chemin provenant de la BDD (ex: "preuves/photo.png")
+                                    // On enlève le premier "/" s'il existe pour éviter le double "//"
+                                    const cleanFilePath = p.fichier.startsWith('/') ? p.fichier.substring(1) : p.fichier;
 
-                                    // 4. On crée l'URL finale
-                                    const finalUrl = `${baseUrl}${filePath}`;
+                                    // 4. L'URL finale propre
+                                    const finalUrl = p.fichier.startsWith('http') ? p.fichier : `${baseUrl}${cleanFilePath}`;
 
                                     return (
-                                        <div key={i} className="group relative aspect-video rounded-4xl overflow-hidden bg-white/5 border border-white/10">
+                                        <div
+                                            key={i}
+                                            className="group relative aspect-video rounded-4xl overflow-hidden bg-white/5 border border-white/10"
+                                        >
+                                            {/* L'image utilise la nouvelle URL calculée */}
                                             <img
                                                 src={finalUrl}
                                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                                 alt="Preuve"
                                                 onError={(e) => {
-                                                    console.error("Erreur de chargement sur :", finalUrl);
-                                                    // Optionnel : mettre une image par défaut si ça casse
-                                                    // e.currentTarget.src = "/fallback-image.png"; 
+                                                    console.error("Image non trouvée :", finalUrl);
                                                 }}
                                             />
 
                                             {/* BOUTON POUR OUVRIR EN GRAND DANS UN LIEN */}
                                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                                                 <button
-                                                    onClick={() => window.open(url, '_blank')}
+                                                    onClick={() => window.open(finalUrl, '_blank')} // Utilise l'URL corrigée ici
                                                     className="p-4 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all shadow-xl active:scale-90"
                                                     title="Ouvrir l'image originale"
                                                 >
