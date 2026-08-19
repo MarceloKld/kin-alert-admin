@@ -1,7 +1,8 @@
 import api from "@/lib/axios";
 import { Incident, PaginatedResponse } from "@/types";
 
-export const STORAGE_URL = "http://localhost:8000/storage/";
+// On utilise la variable d'environnement, sinon on retombe sur localhost par défaut
+export const STORAGE_URL = process.env.NEXT_PUBLIC_STORAGE_URL || "http://localhost:8000";
 
 // On change le type de 'id' en 'string | number' dans toutes les méthodes
 export const IncidentService = {
