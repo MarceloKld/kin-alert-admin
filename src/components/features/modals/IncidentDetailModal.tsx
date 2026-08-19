@@ -79,13 +79,30 @@ return (
                       
                             <div className="grid grid-cols-2 gap-4">
                                 {incident.preuves.map((p, i) => {
-                                    const url = p.fichier.startsWith('http') ? p.fichier : `${STORAGE_URL}${p.fichier}`;
+                                    // 1. On récupère la base URL (ex: http://localhost:8000/storage/)
+                                    let baseUrl = process.env.NEXT_PUBLIC_STORAGE_URL || STORAGE_URL;
+
+                                    // 2. On s'assure qu'elle finit par un seul /
+                                    if (!baseUrl.endsWith('/')) baseUrl += '/';
+
+                                    // 3. On nettoie le chemin du fichier (on enlève le / au début s'il existe)
+                                    const filePath = p.fichier.startsWith('/') ? p.fichier.substring(1) : p.fichier;
+
+                                    // 4. On crée l'URL finale
+                                    const finalUrl = `${baseUrl}${filePath}`;
+
                                     return (
-                                        <div
-                                            key={i}
-                                            className="group relative aspect-video rounded-4xl overflow-hidden bg-white/5 border border-white/10"
-                                        >
-                                            <img src={url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Preuve" />
+                                        <div key={i} className="group relative aspect-video rounded-4xl overflow-hidden bg-white/5 border border-white/10">
+                                            <img
+                                                src={finalUrl}
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                alt="Preuve"
+                                                onError={(e) => {
+                                                    console.error("Erreur de chargement sur :", finalUrl);
+                                                    // Optionnel : mettre une image par défaut si ça casse
+                                                    // e.currentTarget.src = "/fallback-image.png"; 
+                                                }}
+                                            />
 
                                             {/* BOUTON POUR OUVRIR EN GRAND DANS UN LIEN */}
                                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
