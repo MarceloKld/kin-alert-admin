@@ -122,22 +122,29 @@ export default function UsersPage() {
                 <div className="space-y-2">
                     {/* Titre avec icône badge */}
                     <div className="flex items-center gap-3">
-                        {/* Badge icône glassmorphism */}
-                        <div className="p-2 bg-linear-to-br from-red-600/20 to-red-800/20 rounded-xl border border-red-600/30 backdrop-blur-sm">
-                            <Users className="w-5 h-5 text-red-500" />
+
+                        {/* Badge icône glassmorphism avec animations */}
+                        <div className="badge-glow-animate relative p-2 bg-gradient-to-br from-red-600/20 to-red-800/20 
+                    rounded-xl border border-red-600/30 backdrop-blur-sm">
+                            {/* Effet glow pulsant */}
+                            <div className="absolute inset-0 bg-red-600/20 rounded-xl blur-lg pulse-glow" />
+
+                            {/* Icône avec bounce */}
+                            <Users className="relative w-5 h-5 text-red-500 icon-bounce" strokeWidth={2.5} />
                         </div>
 
-                        <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight uppercase">
+                        {/* Titre avec effet apparition */}
+                        <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight uppercase title-slide-in">
                             Utilisateurs
                         </h1>
                     </div>
 
-                    {/* Sous-titre */}
-                    <p className="text-xs text-gray-400 font-semibold tracking-widest uppercase pl-11">
+                    {/* Sous-titre avec fade-in retardé */}
+                    <p className="text-xs text-gray-400 font-semibold tracking-widest uppercase pl-11 subtitle-fade-in">
                         Gestion de la communauté
                     </p>
                 </div>
-
+                
                 {/* Bloc droit : Bouton CTA */}
                 <button
                     onClick={() => setShowCreateModal(true)}

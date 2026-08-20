@@ -24,3 +24,126 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+@layer components {
+  .animate-typewriter-kin {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid white;
+    animation: typewriter-kin 3s steps(9) forwards;
+  }
+
+  .animate-typewriter-mod {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid rgb(220, 38, 38);
+    animation: typewriter-mod 3s steps(10) forwards;
+  }
+}
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.8s ease-out 2s forwards;
+  }
+
+
+@keyframes typewriter-kin {
+  0% { width: 0; }
+  45% { width: 100%; border-right-color: white; }
+  50%, 100% { width: 100%; border-right-color: transparent; }
+}
+
+@keyframes typewriter-mod {
+  0%, 50% { width: 0; border-right-color: transparent; }
+  51% { border-right-color: rgb(220, 38, 38); }
+  90% { width: 100%; border-right-color: rgb(220, 38, 38); }
+  100% { width: 100%; border-right-color: transparent; }
+}
+
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🎨 ANIMATIONS HEADER UTILISATEURS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Animation badge glow pulsant */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 5s ease-in-out infinite;
+}
+
+/* Animation rotation subtile badge */
+@keyframes badge-glow-rotate {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(2deg);
+  }
+}
+
+.badge-glow-animate {
+  animation: badge-glow-rotate 4s ease-in-out infinite;
+}
+
+/* Animation icône bounce lent */
+@keyframes icon-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.icon-bounce {
+  animation: icon-bounce 9s ease-in-out infinite;
+}
+
+/* Animation titre slide-in depuis la gauche */
+@keyframes title-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.title-slide-in {
+  animation: title-slide-in 0.6s ease-out forwards;
+}
+
+/* Animation sous-titre fade-in avec délai */
+@keyframes subtitle-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.subtitle-fade-in {
+  animation: subtitle-fade-in 3.8s ease-out 0.6s forwards;
+  opacity: 0; /* Important pour le délai */
+}
