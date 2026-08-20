@@ -1,6 +1,22 @@
 "use client";
+
 import React from 'react';
 import { AlertTriangle, Trash2, X, Loader2 } from 'lucide-react';
+
+/* 
+  ═══════════════════════════════════════════════════════════════
+  🗑️ DELETE CONFIRM MODAL - Confirmation suppression
+  ═══════════════════════════════════════════════════════════════
+  Améliorations :
+  - Glassmorphism moderne avec backdrop-blur
+  - Animation d'entrée fluide (scale + fade)
+  - Bouton fermeture (X) en haut à droite
+  - États hover/disabled optimisés
+  - Icône animée au chargement
+  - Espacement grille 8px cohérent
+  - Bordures et ombres subtiles
+  ═══════════════════════════════════════════════════════════════
+*/
 
 interface Props {
     isOpen: boolean;
@@ -11,46 +27,141 @@ interface Props {
 }
 
 export const DeleteConfirmModal = ({ isOpen, userName, loading, onClose, onConfirm }: Props) => {
+    // Ne rien rendre si la modale est fermée
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
-            <div className="bg-[#0b0c10] border border-red-500/20 w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.1)]">
+        /* 
+          ═══════════════════════════════════════════════════════════
+          🎭 OVERLAY - Fond sombre avec blur
+          ═══════════════════════════════════════════════════════════
+        */
+        <div
+            className="fixed inset-0 z-[9998] flex items-center justify-center p-4 
+                       bg-black/80 backdrop-blur-md 
+                       animate-in fade-in duration-200"
+            onClick={onClose} // Fermeture au clic sur l'overlay
+        >
+            {/* 
+              ═══════════════════════════════════════════════════════
+              📦 CONTAINER MODAL
+              ═══════════════════════════════════════════════════════
+            */}
+            <div
+                className="relative bg-white/5 backdrop-blur-xl border border-red-500/30 
+                           w-full max-w-md rounded-2xl overflow-hidden 
+                           shadow-2xl shadow-red-900/20
+                           animate-in zoom-in-95 duration-300"
+                onClick={(e) => e.stopPropagation()} // Empêche la fermeture au clic interne
+            >
 
-                {/* Header d'alerte */}
-                <div className="p-8 pb-4 flex flex-col items-center text-center space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20">
-                        <AlertTriangle size={32} />
+                {/* 
+                  ═══════════════════════════════════════════════════
+                  ❌ BOUTON FERMETURE
+                  ═══════════════════════════════════════════════════
+                */}
+                <button
+                    onClick={onClose}
+                    disabled={loading}
+                    className="absolute top-4 right-4 p-2 
+                               text-gray-400 hover:text-white hover:bg-white/10 
+                               rounded-lg transition-all duration-200
+                               disabled:opacity-50 disabled:cursor-not-allowed
+                               z-10"
+                    aria-label="Fermer"
+                >
+                    <X className="w-5 h-5" strokeWidth={2.5} />
+                </button>
+
+                {/* 
+                  ═══════════════════════════════════════════════════
+                  🎯 HEADER - Icône + Titre
+                  ═══════════════════════════════════════════════════
+                */}
+                <div className="p-8 pb-6 flex flex-col items-center text-center space-y-4">
+                    {/* Icône d'alerte avec animation pulse */}
+                    <div className="relative">
+                        <div className="w-20 h-20 rounded-2xl bg-red-500/10 border border-red-500/30 
+                                      flex items-center justify-center">
+                            <AlertTriangle className="w-10 h-10 text-red-500" strokeWidth={2.5} />
+                        </div>
+                        {/* Effet pulse animé */}
+                        <div className="absolute inset-0 rounded-2xl bg-red-500/20 animate-ping opacity-75" />
                     </div>
-                    <div>
-                        <h2 className="text-xl font-black text-white uppercase italic tracking-tighter">Confirmation</h2>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Action Irréversible</p>
+
+                    {/* Titre + sous-titre */}
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-black text-white tracking-tight">
+                            Confirmation requise
+                        </h2>
+                        <p className="text-xs text-red-400 font-bold uppercase tracking-widest">
+                            Action Irréversible
+                        </p>
                     </div>
                 </div>
 
-                {/* Corps du message */}
-                <div className="p-8 pt-0 text-center">
+                {/* 
+                  ═══════════════════════════════════════════════════
+                  📝 CORPS - Message d'avertissement
+                  ═══════════════════════════════════════════════════
+                */}
+                <div className="px-8 pb-6 text-center">
                     <p className="text-sm text-gray-300 leading-relaxed">
-                        Voulez-vous vraiment supprimer le compte de <span className="text-white font-black italic">{userName}</span> ?
-                        Toutes ses données seront effacées du système.
+                        Voulez-vous vraiment supprimer le compte de{' '}
+                        <span className="font-bold text-white bg-white/10 px-2 py-0.5 rounded">
+                            {userName}
+                        </span>
+                        {' '}?
+                    </p>
+                    <p className="text-xs text-gray-400 mt-3">
+                        Toutes les données associées seront définitivement effacées.
                     </p>
                 </div>
 
-                {/* Actions */}
-                <div className="p-8 pt-0 flex gap-3">
+                {/* 
+                  ═══════════════════════════════════════════════════
+                  🎬 FOOTER - Boutons d'action
+                  ═══════════════════════════════════════════════════
+                */}
+                <div className="p-6 bg-white/5 border-t border-white/10 flex gap-3">
+                    {/* Bouton Annuler */}
                     <button
                         onClick={onClose}
                         disabled={loading}
-                        className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all outline-none"
+                        className="flex-1 py-3 px-4 
+                                   bg-white/5 hover:bg-white/10 border border-white/10 
+                                   text-white font-bold text-sm uppercase tracking-wide 
+                                   rounded-xl transition-all duration-200
+                                   disabled:opacity-50 disabled:cursor-not-allowed
+                                   active:scale-95"
                     >
                         Annuler
                     </button>
+
+                    {/* Bouton Supprimer */}
                     <button
                         onClick={onConfirm}
                         disabled={loading}
-                        className="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-900/20"
+                        className="flex-1 py-3 px-4 
+                                   bg-red-600 hover:bg-red-700 border border-red-600 
+                                   text-white font-bold text-sm uppercase tracking-wide 
+                                   rounded-xl transition-all duration-200
+                                   disabled:opacity-70 disabled:cursor-not-allowed
+                                   shadow-lg shadow-red-900/30 hover:shadow-red-900/50
+                                   active:scale-95
+                                   flex items-center justify-center gap-2"
                     >
-                        {loading ? <Loader2 className="animate-spin" size={14} /> : <><Trash2 size={14} /> Supprimer</>}
+                        {loading ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2.5} />
+                                <span>Suppression...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Trash2 className="w-4 h-4" strokeWidth={2.5} />
+                                <span>Supprimer</span>
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
