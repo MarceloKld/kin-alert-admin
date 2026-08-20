@@ -4,6 +4,39 @@ import { Incident, PaginatedResponse } from "@/types";
 // On utilise la variable d'environnement, sinon on retombe sur localhost par défaut
 export const STORAGE_URL = process.env.NEXT_PUBLIC_STORAGE_URL || "http://localhost:8000";
 
+// ✅ EXPORT DU TYPE (accessible dans MapView.tsx)
+export interface IncidentPublic {
+  id: number;
+  titre: string;
+  description: string;
+  localisation: {
+    latitude: number;
+    longitude: number;
+    avenue: string;
+    commune: {
+      id: number;
+      nom: string;
+    };
+  };
+  statut: "en_attente" | "valide" | "rejete";
+  nombre_confirmations: number;
+  auteur: {
+    id: number;
+    nom: string;
+    role: string;
+  };
+  preuves: Array<{
+    id: number;
+    url: string;
+    type: string;
+  }>;
+  date_creation: string;
+  type_incident?: {
+    id: number;
+    titre: string;
+  };
+}
+
 // On change le type de 'id' en 'string | number' dans toutes les méthodes
 export const IncidentService = {
   getAll: async (page = 1, status?: string, search?: string) => {
@@ -19,7 +52,34 @@ export const IncidentService = {
     );
     return response.data;
   },
-  
+  /* 
+    ═══════════════════════════════════════════════════════
+    🗺️ Tous les incidents pour la carte (API publique)
+    ═══════════════════════════════════════════════════════
+  */
+  getAllForMap: async (
+    status?: string,
+    search?: string,
+    commune?: string,
+  ): Promise<IncidentPublic[]> => {
+    try {
+      const response = await api.get<{ data: IncidentPublic[] }>(`/incidents`, {
+        params: {
+          all: true,
+          status: status === "tous" ? undefined : status,
+          search: search || undefined,
+          commune: commune || undefined,
+        },
+      });
+
+      console.log(`✅ ${response.data.data.length} incidents récupérés`);
+
+      return response.data.data;
+    } catch (error) {
+      console.error("❌ Erreur getAllForMap:", error);
+      return [];
+    }
+  },
   getComments: async (incidentId: string | number) => {
     const response = await api.get(`/incidents/${incidentId}/comments`);
     return response.data;

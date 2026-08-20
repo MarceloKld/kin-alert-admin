@@ -120,6 +120,41 @@ export interface Incident {
   commentaires?: Commentaire[];
 }
 
+
+export interface IncidentPublic {
+  id: number;
+  titre: string;
+  description: string;
+  localisation: {
+    latitude: number;
+    longitude: number;
+    avenue: string;
+    commune: {
+      id: number;
+      nom: string;
+    };
+  };
+  statut: "en_attente" | "valide" | "rejete";
+  nombre_confirmations: number;
+  auteur: {
+    id: number;
+    nom: string;
+    role: string;
+  };
+  preuves: Array<{
+    id: number;
+    url: string;
+    type: string;
+  }>;
+  date_creation: string;
+  type_incident?: {
+    id: number;
+    titre: string;
+  };
+}
+
+
+
 // Commentaires
 export interface Commentaire {
   id: number;

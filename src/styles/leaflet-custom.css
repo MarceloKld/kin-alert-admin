@@ -1,0 +1,63 @@
+/* ═══════════════════════════════════════════════════════════════
+   🗺️ LEAFLET CUSTOM STYLES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Container carte */
+.leaflet-container {
+  background: #1a1a1a;
+  font-family: inherit;
+}
+
+/* Tiles OpenStreetMap (mode sombre) */
+.leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+/* Popup personnalisé */
+.leaflet-popup-content-wrapper {
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  color: white;
+}
+
+.leaflet-popup-tip {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Clusters */
+.marker-cluster {
+  background: rgba(220, 38, 38, 0.6);
+  border: 3px solid white;
+}
+
+.marker-cluster div {
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  font-weight: bold;
+}
+
+/* Contrôles zoom */
+.leaflet-control-zoom {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(10px);
+  color: white !important;
+  border: none !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(220, 38, 38, 0.8) !important;
+}

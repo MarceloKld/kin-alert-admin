@@ -10,7 +10,8 @@ import {
     Settings,
     LogOut,
     Shield,
-    X
+    X,
+    Map
 } from "lucide-react";
 
 import { motion } from 'framer-motion';
@@ -30,13 +31,45 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const { isAdmin } = useAuth(); // On récupère le statut Admin
-
+    // ✅ MENU AVEC CARTE AJOUTÉE
     const menuItems = [
-        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["administrateur", "gestionnaire"] },
-        { name: "Incidents", href: "/dashboard/incidents", icon: AlertTriangle, roles: ["administrateur", "gestionnaire"] },
-        { name: "Utilisateurs", href: "/dashboard/users", icon: Users, roles: ["administrateur"] },
-        { name: "Notifications", href: "/dashboard/notifications", icon: Bell, roles: ["administrateur", "gestionnaire"] },
-        { name: "Paramètres", href: "/dashboard/settings", icon: Settings, roles: ["administrateur"] },
+        {
+            name: "Dashboard",
+            href: "/dashboard",
+            icon: LayoutDashboard,
+            roles: ["administrateur", "gestionnaire"]
+        },
+        {
+            name: "Incidents",
+            href: "/dashboard/incidents",
+            icon: AlertTriangle,
+            roles: ["administrateur", "gestionnaire"]
+        },
+        {
+            name: "Carte Interactive", // ✅ NOUVEAU
+            href: "/dashboard/carte",
+            icon: Map,
+            roles: ["administrateur", "gestionnaire"],
+            badge: "NEW" // Optionnel
+        },
+        {
+            name: "Utilisateurs",
+            href: "/dashboard/users",
+            icon: Users,
+            roles: ["administrateur"]
+        },
+        {
+            name: "Notifications",
+            href: "/dashboard/notifications",
+            icon: Bell,
+            roles: ["administrateur", "gestionnaire"]
+        },
+        {
+            name: "Paramètres",
+            href: "/dashboard/settings",
+            icon: Settings,
+            roles: ["administrateur"]
+        },
     ];
 
     const handleLogout = () => {
@@ -171,10 +204,9 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                     return (
                         <motion.div
                             key={item.name}
-                            // Animation d'apparition séquentielle
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.5 }}  // Délai progressif
+                            transition={{ delay: index * 0.05 }}
                         >
                             <Link
                                 href={item.href}
@@ -182,22 +214,20 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                                 className="block relative group"
                             >
                                 <motion.div
-                                    // ANIMATIONS AU HOVER
-                                    whileHover={{ scale: 1.02, x: 4 }}  // Léger agrandissement + décalage droite
-                                    whileTap={{ scale: 0.98 }}           // Réduit au clic
+                                    whileHover={{ scale: 1.02, x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                     className={`
-                            relative flex items-center gap-3 px-4 py-3.5 rounded-xl
-                            transition-all duration-300
-                            ${isActive
-                                            ? "bg-linear-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/40"
+                                        relative flex items-center gap-3 px-4 py-3.5 rounded-xl
+                                        transition-all duration-300
+                                        ${isActive
+                                            ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/40"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                         }
-                        `}
+                                    `}
                                 >
-                                    {/* ===== INDICATEUR ACTIF (barre gauche) ===== */}
                                     {isActive && (
                                         <motion.div
-                                            layoutId="activeTab"  // Animation fluide entre items
+                                            layoutId="activeTab"
                                             className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full shadow-lg shadow-white/50"
                                             transition={{
                                                 type: "spring",
@@ -207,7 +237,6 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                                         />
                                     )}
 
-                                    {/* ===== ICÔNE avec rotation au clic ===== */}
                                     <motion.div
                                         animate={isActive ? { rotate: [0, -10, 10, 0] } : {}}
                                         transition={{ duration: 0.5 }}
@@ -215,22 +244,27 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                                     >
                                         <Icon
                                             size={20}
-                                            strokeWidth={isActive ? 2.5 : 2}  // Plus épais si actif
+                                            strokeWidth={isActive ? 2.5 : 2}
                                             className={isActive ? "drop-shadow-lg" : ""}
                                         />
                                     </motion.div>
 
-                                    {/* ===== TEXTE ===== */}
                                     <span className={`
-                            relative z-10 font-medium tracking-wide
-                            ${isActive ? "font-semibold" : ""}
-                        `}>
+                                        relative z-10 font-medium tracking-wide
+                                        ${isActive ? "font-semibold" : ""}
+                                    `}>
                                         {item.name}
                                     </span>
 
-                                    {/* ===== CHEVRON au hover (items inactifs) ===== */}
+                                    {/* ✅ BADGE "NEW" sur Carte */}
+                                    {item.badge && !isActive && (
+                                        <span className="ml-auto px-2 py-0.5 text-[10px] font-black uppercase bg-red-500 text-white rounded-full animate-pulse">
+                                            {item.badge}
+                                        </span>
+                                    )}
+
                                     <AnimatePresence>
-                                        {!isActive && (
+                                        {!isActive && !item.badge && (
                                             <motion.div
                                                 initial={{ opacity: 0, x: -10 }}
                                                 whileHover={{ opacity: 1, x: 0 }}
@@ -247,6 +281,7 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
                     );
                 })}
             </nav>
+            
             {/* ========================================
     FOOTER - DÉCONNEXION & STATUS
     - Indicateur système en temps réel
