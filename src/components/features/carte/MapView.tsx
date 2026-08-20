@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
-import { IncidentService, IncidentPublic } from '@/services/incident.service';
+import { IncidentService, IncidentPublic, STORAGE_URL } from '@/services/incident.service';
 import {
     AlertTriangle, MapPin, Calendar, User, Eye, X,
     Filter, Loader2, RefreshCcw, Maximize2
@@ -40,6 +40,27 @@ export default function MapView() {
         communeId: 0, // ✅ Changé de commune (string) à communeId (number)
         search: ''
     });
+
+
+    /* 
+    ═══════════════════════════════════════════════════════════
+    🖼️ FONCTION GÉNÉRATION URL (identique à IncidentDetailModal)
+    ═══════════════════════════════════════════════════════════
+  */
+    const getImageUrl = (urlFromApi: string): string => {
+        if (!urlFromApi) return '';
+
+        // Si c'est déjà une URL complète, la retourner
+        if (urlFromApi.startsWith('http')) return urlFromApi;
+
+        // Sinon construire l'URL complète
+        let baseUrl = process.env.NEXT_PUBLIC_STORAGE_URL || STORAGE_URL || '';
+        if (!baseUrl.endsWith('/')) baseUrl += '/';
+
+        const cleanFilePath = urlFromApi.startsWith('/') ? urlFromApi.substring(1) : urlFromApi;
+        return `${baseUrl}${cleanFilePath}`;
+    };
+
 
     /* 
       ═══════════════════════════════════════════════════════════
@@ -281,8 +302,11 @@ export default function MapView() {
                     ))}
                 </MarkerClusterGroup>
             </MapContainer>
-
-            {/* MODAL DÉTAILS */}
+            {/* 
+        ═══════════════════════════════════════════════════════
+        📋 MODAL DÉTAILS (ADAPTÉ avec Next.js Image)
+        ═══════════════════════════════════════════════════════
+      */}
             {selectedIncident && (
                 <div
                     className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md 
@@ -317,38 +341,54 @@ export default function MapView() {
                         {/* Contenu */}
                         <div className="p-6 space-y-6">
 
-                            {/* GALERIE PHOTOS */}
+                            {/* 
+  ═══════════════════════════════════════════════════════════
+  🖼️ GALERIE PHOTOS (identique à IncidentDetailModal)
+  ═══════════════════════════════════════════════════════════
+*/}
                             {selectedIncident.preuves && selectedIncident.preuves.length > 0 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {selectedIncident.preuves.map((preuve, i) => (
-                                        <div
-                                            key={preuve.id}
-                                            className="group relative aspect-video rounded-xl overflow-hidden 
-                 bg-white/5 border border-white/10 cursor-pointer"
-                                            onClick={() => setFullImage(preuve.url)}
-                                        >
-                                            <img
-                                                src={preuve.url}
-                                                className="w-full h-full object-cover 
-                   transition-transform duration-500 group-hover:scale-110"
-                                                alt={`Preuve ${i + 1}`}
-                                                loading="lazy"
-                                                onError={(e) => {
-                                                    console.error('Erreur image:', preuve.url);
-                                                    e.currentTarget.style.display = 'none';
-                                                }}
-                                            />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                    {selectedIncident.preuves.map((preuve, i) => {
+                                        const imageUrl = getImageUrl(preuve.url);
 
-                                            {/* Overlay hover */}
-                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 
-                      transition-opacity flex items-center justify-center">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <Maximize2 className="w-6 h-6 text-white" strokeWidth={2.5} />
-                                                    <span className="text-xs text-white font-semibold">Agrandir</span>
+                                        return (
+                                            <div
+                                                key={preuve.id}
+                                                className="group relative aspect-video rounded-xl overflow-hidden 
+                   bg-white/5 border border-white/10 cursor-pointer"
+                                                onClick={() => setFullImage(imageUrl)}
+                                            >
+                                                {/* ✅ Retour à <img> standard (comme IncidentDetailModal) */}
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={`Preuve ${i + 1}`}
+                                                    className="w-full h-full object-cover 
+                     transition-transform duration-500 
+                     group-hover:scale-110"
+                                                    loading="lazy"
+                                                    onError={(e) => {
+                                                        console.error('Image non trouvée:', imageUrl);
+                                                        e.currentTarget.src = '/placeholder-image.png';
+                                                    }}
+                                                />
+
+                                                {/* Overlay hover */}
+                                                <div className="absolute inset-0 bg-black/60 
+                        opacity-0 group-hover:opacity-100 
+                        transition-opacity duration-300
+                        flex flex-col items-center justify-center gap-2">
+                                                    <div className="p-3 bg-red-600 rounded-full 
+                          group-hover:scale-110 transition-transform duration-300
+                          shadow-lg">
+                                                        <Maximize2 className="w-5 h-5 text-white" strokeWidth={2.5} />
+                                                    </div>
+                                                    <span className="text-xs text-white font-bold uppercase tracking-wider">
+                                                        Agrandir
+                                                    </span>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
 
