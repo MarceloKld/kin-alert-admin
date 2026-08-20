@@ -54,25 +54,31 @@ export const IncidentService = {
   },
   /* 
     ═══════════════════════════════════════════════════════
-    🗺️ Tous les incidents pour la carte (API publique)
+    🗺️ Tous les incidents pour la carte
+    ✅ CORRECTION : Utilise commune_id et statut
     ═══════════════════════════════════════════════════════
   */
   getAllForMap: async (
-    status?: string,
+    statut?: string,
     search?: string,
-    commune?: string,
+    communeId?: number, // ✅ Changé de commune (string) à communeId (number)
   ): Promise<IncidentPublic[]> => {
     try {
       const response = await api.get<{ data: IncidentPublic[] }>(`/incidents`, {
         params: {
           all: true,
-          status: status === "tous" ? undefined : status,
+          statut: statut && statut !== "tous" ? statut : undefined, // ✅ Changé de 'status' à 'statut'
           search: search || undefined,
-          commune: commune || undefined,
+          commune_id: communeId || undefined, // ✅ Changé de 'commune' à 'commune_id'
         },
       });
 
       console.log(`✅ ${response.data.data.length} incidents récupérés`);
+      console.log("📡 Params envoyés:", {
+        statut: statut !== "tous" ? statut : "tous",
+        commune_id: communeId || "toutes",
+        search: search || "aucune",
+      });
 
       return response.data.data;
     } catch (error) {

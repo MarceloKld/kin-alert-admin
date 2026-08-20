@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
-import { IncidentService,  } from '@/services/incident.service';
+import { IncidentService, IncidentPublic } from '@/services/incident.service';
 import {
     AlertTriangle, MapPin, Calendar, User, Eye, X,
     Filter, Loader2, RefreshCcw, Maximize2
@@ -12,40 +12,6 @@ import {
 import StatusBadge from '@/components/ui/StatusBadge';
 import 'leaflet/dist/leaflet.css';
 import '@/styles/leaflet-custom.css';
-
-interface PreuvePublic {
-    id: number;
-    url: string;
-    type: string;
-}
-
-interface IncidentPublic {
-    id: number;
-    titre: string;
-    description: string;
-    localisation: {
-        latitude: number;
-        longitude: number;
-        avenue: string;
-        commune: {
-            id: number;
-            nom: string;
-        };
-    };
-    statut: "en_attente" | "valide" | "rejete";
-    nombre_confirmations: number;
-    auteur: {
-        id: number;
-        nom: string;
-        role: string;
-    };
-    preuves: PreuvePublic[];
-    date_creation: string;
-    type_incident?: {
-        id: number;
-        titre: string;
-    };
-}
 
 /* Fix icônes Leaflet */
 const fixLeafletIcons = () => {
@@ -70,28 +36,26 @@ export default function MapView() {
     const [selectedIncident, setSelectedIncident] = useState<IncidentPublic | null>(null);
     const [fullImage, setFullImage] = useState<string | null>(null);
     const [filters, setFilters] = useState({
-        status: 'tous',
-        commune: 'tous',
+        statut: 'tous',
+        communeId: 0, // ✅ Changé de commune (string) à communeId (number)
         search: ''
     });
 
     /* 
       ═══════════════════════════════════════════════════════════
-      📡 CHARGEMENT TOUS LES INCIDENTS (Endpoint public)
+      📡 CHARGEMENT INCIDENTS
       ═══════════════════════════════════════════════════════════
     */
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
             try {
-                // ✅ Utilise l'endpoint public /incidents?all=true
                 const allIncidents = await IncidentService.getAllForMap(
-                    filters.status === 'tous' ? undefined : filters.status,
+                    filters.statut === 'tous' ? undefined : filters.statut,
                     filters.search || undefined,
-                    filters.commune === 'tous' ? undefined : filters.commune
+                    filters.communeId === 0 ? undefined : filters.communeId // ✅ Envoie l'ID numérique
                 );
 
-                // ✅ Filtrer incidents avec coordonnées valides
                 const validIncidents = allIncidents.filter((incident: IncidentPublic) => {
                     const lat = incident.localisation.latitude;
                     const lng = incident.localisation.longitude;
@@ -100,7 +64,7 @@ export default function MapView() {
 
                 setIncidents(validIncidents);
 
-                // ✅ Extraire communes uniques
+                // Extraire communes uniques
                 const uniqueCommunes = Array.from(
                     new Map(
                         validIncidents.map(i => [i.localisation.commune.id, i.localisation.commune])
@@ -109,11 +73,11 @@ export default function MapView() {
 
                 setCommunes(uniqueCommunes);
 
-                console.log(`✅ ${validIncidents.length} incidents géolocalisés chargés`);
+                console.log(`✅ ${validIncidents.length} incidents géolocalisés`);
                 console.log(`📍 ${uniqueCommunes.length} communes trouvées`);
 
             } catch (error) {
-                console.error('❌ Erreur chargement incidents:', error);
+                console.error('❌ Erreur chargement:', error);
                 setIncidents([]);
             } finally {
                 setLoading(false);
@@ -121,7 +85,7 @@ export default function MapView() {
         };
 
         loadData();
-    }, [filters.status, filters.commune, filters.search]);
+    }, [filters.statut, filters.communeId, filters.search]); // ✅ Dépendance sur communeId
 
     /* Création icônes */
     const createCustomIcon = (statut: string) => {
@@ -161,7 +125,6 @@ export default function MapView() {
             popupAnchor: [0, -36]
         });
     };
-
     return (
         <div className="relative h-full w-full">
 
@@ -172,10 +135,9 @@ export default function MapView() {
                      flex items-center justify-center p-4 cursor-zoom-out"
                     onClick={() => setFullImage(null)}
                 >
-                    <button className="absolute top-4 right-4 sm:top-8 sm:right-8 
-                           p-2 sm:p-3 bg-white/10 hover:bg-red-600 
+                    <button className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-red-600 
                            rounded-full text-white transition-all">
-                        <X className="w-6 h-6 sm:w-8 sm:h-8" />
+                        <X className="w-8 h-8" />
                     </button>
                     <img
                         src={fullImage}
@@ -185,8 +147,11 @@ export default function MapView() {
                     />
                 </div>
             )}
-
-            {/* PANEL FILTRES */}
+            {/* 
+        ═══════════════════════════════════════════════════════
+        🎛️ PANEL FILTRES
+        ═══════════════════════════════════════════════════════
+      */}
             <div className="absolute top-4 left-4 z-[999] 
                     bg-black/70 backdrop-blur-xl border border-white/10 
                     rounded-2xl p-4 space-y-4 w-80 shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto">
@@ -197,8 +162,9 @@ export default function MapView() {
                         Filtres
                     </h3>
                     <button
-                        onClick={() => setFilters({ status: 'tous', commune: 'tous', search: '' })}
+                        onClick={() => setFilters({ statut: 'tous', communeId: 0, search: '' })}
                         className="p-1.5 hover:bg-white/10 rounded-lg transition-all"
+                        title="Réinitialiser"
                     >
                         <RefreshCcw className="w-4 h-4 text-gray-400 hover:text-white" />
                     </button>
@@ -221,42 +187,42 @@ export default function MapView() {
                     />
                 </div>
 
-                {/* Filtre Commune */}
+                {/* ✅ FILTRE COMMUNE (par ID) */}
                 <div>
                     <label className="text-xs text-gray-400 font-semibold uppercase block mb-2">
                         Commune
                     </label>
                     <select
-                        value={filters.commune}
-                        onChange={(e) => setFilters(prev => ({ ...prev, commune: e.target.value }))}
+                        value={filters.communeId}
+                        onChange={(e) => setFilters(prev => ({ ...prev, communeId: Number(e.target.value) }))}
                         className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 
                      text-sm text-white 
                      focus:border-red-500 focus:ring-1 focus:ring-red-500 
                      outline-none transition-all cursor-pointer"
                     >
-                        <option value="tous" className="bg-gray-900">Toutes les communes</option>
+                        <option value={0} className="bg-gray-900">Toutes les communes</option>
                         {communes.map((commune) => (
-                            <option key={commune.id} value={commune.nom} className="bg-gray-900">
+                            <option key={commune.id} value={commune.id} className="bg-gray-900">
                                 📍 {commune.nom}
                             </option>
                         ))}
                     </select>
                 </div>
 
-                {/* Statut */}
+                {/* ✅ FILTRE STATUT */}
                 <div>
                     <label className="text-xs text-gray-400 font-semibold uppercase block mb-2">
                         Statut
                     </label>
                     <select
-                        value={filters.status}
-                        onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                        value={filters.statut}
+                        onChange={(e) => setFilters(prev => ({ ...prev, statut: e.target.value }))}
                         className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 
                      text-sm text-white 
                      focus:border-red-500 focus:ring-1 focus:ring-red-500 
                      outline-none transition-all cursor-pointer"
                     >
-                        <option value="tous" className="bg-gray-900">Tous</option>
+                        <option value="tous" className="bg-gray-900">Tous les statuts</option>
                         <option value="en_attente" className="bg-gray-900">⏳ En attente</option>
                         <option value="valide" className="bg-gray-900">✓ Validés</option>
                         <option value="rejete" className="bg-gray-900">✗ Rejetés</option>
@@ -266,7 +232,7 @@ export default function MapView() {
                 {/* Stats */}
                 <div className="pt-3 border-t border-white/10 space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-400">Incidents affichés</span>
+                        <span className="text-gray-400">Affichés</span>
                         <span className="font-bold text-white text-lg tabular-nums">{incidents.length}</span>
                     </div>
                     {loading && (
@@ -292,10 +258,7 @@ export default function MapView() {
                     {incidents.map((incident) => (
                         <Marker
                             key={incident.id}
-                            position={[
-                                incident.localisation.latitude,
-                                incident.localisation.longitude
-                            ]}
+                            position={[incident.localisation.latitude, incident.localisation.longitude]}
                             icon={createCustomIcon(incident.statut)}
                             eventHandlers={{ click: () => setSelectedIncident(incident) }}
                         >
@@ -357,9 +320,9 @@ export default function MapView() {
                             {/* GALERIE PHOTOS */}
                             {selectedIncident.preuves && selectedIncident.preuves.length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {selectedIncident.preuves.map((preuve: PreuvePublic, i: number) => (
+                                    {selectedIncident.preuves.map((preuve, i) => (
                                         <div
-                                            key={preuve.id} // ✅ Utilise preuve.id au lieu de i
+                                            key={preuve.id}
                                             className="group relative aspect-video rounded-xl overflow-hidden 
                  bg-white/5 border border-white/10 cursor-pointer"
                                             onClick={() => setFullImage(preuve.url)}
