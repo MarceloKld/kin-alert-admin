@@ -41,26 +41,26 @@ export default function MapView() {
         search: ''
     });
 
-
     /* 
-    ═══════════════════════════════════════════════════════════
-    🖼️ FONCTION GÉNÉRATION URL (identique à IncidentDetailModal)
-    ═══════════════════════════════════════════════════════════
-  */
+      ═══════════════════════════════════════════════════════════
+      🖼️ FONCTION GÉNÉRATION URL (Corrigée)
+      ═══════════════════════════════════════════════════════════
+    */
     const getImageUrl = (urlFromApi: string): string => {
         if (!urlFromApi) return '';
 
-        // Si c'est déjà une URL complète, la retourner
-        if (urlFromApi.startsWith('http')) return urlFromApi;
+        // ✅ SI C'EST DÉJÀ UNE URL COMPLÈTE (http/https), LA RETOURNER DIRECTEMENT
+        if (urlFromApi.startsWith('http://') || urlFromApi.startsWith('https://')) {
+            return urlFromApi;
+        }
 
-        // Sinon construire l'URL complète
+        // ✅ SINON, CONSTRUIRE L'URL AVEC LE STORAGE_URL
         let baseUrl = process.env.NEXT_PUBLIC_STORAGE_URL || STORAGE_URL || '';
         if (!baseUrl.endsWith('/')) baseUrl += '/';
 
         const cleanFilePath = urlFromApi.startsWith('/') ? urlFromApi.substring(1) : urlFromApi;
         return `${baseUrl}${cleanFilePath}`;
     };
-
 
     /* 
       ═══════════════════════════════════════════════════════════
@@ -341,15 +341,12 @@ export default function MapView() {
                         {/* Contenu */}
                         <div className="p-6 space-y-6">
 
-                            {/* 
-  ═══════════════════════════════════════════════════════════
-  🖼️ GALERIE PHOTOS (identique à IncidentDetailModal)
-  ═══════════════════════════════════════════════════════════
-*/}
+                            {/* GALERIE PHOTOS */}
                             {selectedIncident.preuves && selectedIncident.preuves.length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     {selectedIncident.preuves.map((preuve, i) => {
-                                        const imageUrl = getImageUrl(preuve.url);
+                                        // ✅ UTILISE DIRECTEMENT preuve.url (pas de transformation)
+                                        const imageUrl = preuve.url;
 
                                         return (
                                             <div
@@ -358,7 +355,6 @@ export default function MapView() {
                    bg-white/5 border border-white/10 cursor-pointer"
                                                 onClick={() => setFullImage(imageUrl)}
                                             >
-                                                {/* ✅ Retour à <img> standard (comme IncidentDetailModal) */}
                                                 <img
                                                     src={imageUrl}
                                                     alt={`Preuve ${i + 1}`}
@@ -367,12 +363,11 @@ export default function MapView() {
                      group-hover:scale-110"
                                                     loading="lazy"
                                                     onError={(e) => {
-                                                        console.error('Image non trouvée:', imageUrl);
+                                                        console.error('❌ Image non trouvée:', imageUrl);
                                                         e.currentTarget.src = '/placeholder-image.png';
                                                     }}
                                                 />
 
-                                                {/* Overlay hover */}
                                                 <div className="absolute inset-0 bg-black/60 
                         opacity-0 group-hover:opacity-100 
                         transition-opacity duration-300
