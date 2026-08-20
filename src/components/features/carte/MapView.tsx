@@ -46,19 +46,17 @@ export default function MapView() {
       🖼️ FONCTION GÉNÉRATION URL (Corrigée)
       ═══════════════════════════════════════════════════════════
     */
-    const getImageUrl = (urlFromApi: string): string => {
-        if (!urlFromApi) return '';
-
-        // ✅ SI C'EST DÉJÀ UNE URL COMPLÈTE (http/https), LA RETOURNER DIRECTEMENT
-        if (urlFromApi.startsWith('http://') || urlFromApi.startsWith('https://')) {
-            return urlFromApi;
+    // Fonction pour générer l'URL correcte des images
+    const getImageUrl = (fichier: string): string => {
+        // ✅ VÉRIFIE http:// ET https://
+        if (fichier.startsWith('http://') || fichier.startsWith('https://')) {
+            return fichier;
         }
 
-        // ✅ SINON, CONSTRUIRE L'URL AVEC LE STORAGE_URL
         let baseUrl = process.env.NEXT_PUBLIC_STORAGE_URL || STORAGE_URL || '';
         if (!baseUrl.endsWith('/')) baseUrl += '/';
 
-        const cleanFilePath = urlFromApi.startsWith('/') ? urlFromApi.substring(1) : urlFromApi;
+        const cleanFilePath = fichier.startsWith('/') ? fichier.substring(1) : fichier;
         return `${baseUrl}${cleanFilePath}`;
     };
 
@@ -307,6 +305,7 @@ export default function MapView() {
         📋 MODAL DÉTAILS (ADAPTÉ avec Next.js Image)
         ═══════════════════════════════════════════════════════
       */}
+            {/* MODAL DÉTAILS */}
             {selectedIncident && (
                 <div
                     className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md 
@@ -345,36 +344,36 @@ export default function MapView() {
                             {selectedIncident.preuves && selectedIncident.preuves.length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     {selectedIncident.preuves.map((preuve, i) => {
-                                        // ✅ UTILISE DIRECTEMENT preuve.url (pas de transformation)
-                                        const imageUrl = preuve.url;
+                                        // ✅ UTILISE getImageUrl() pour gérer local ET Cloudinary
+                                        const imageUrl = getImageUrl(preuve.url);
 
                                         return (
                                             <div
                                                 key={preuve.id}
                                                 className="group relative aspect-video rounded-xl overflow-hidden 
-                   bg-white/5 border border-white/10 cursor-pointer"
+                                 bg-white/5 border border-white/10 cursor-pointer"
                                                 onClick={() => setFullImage(imageUrl)}
                                             >
                                                 <img
                                                     src={imageUrl}
                                                     alt={`Preuve ${i + 1}`}
                                                     className="w-full h-full object-cover 
-                     transition-transform duration-500 
-                     group-hover:scale-110"
+                                   transition-transform duration-500 
+                                   group-hover:scale-110"
                                                     loading="lazy"
                                                     onError={(e) => {
-                                                        console.error('❌ Image non trouvée:', imageUrl);
-                                                        e.currentTarget.src = '/placeholder-image.png';
+                                                        console.error('❌ Erreur image:', imageUrl);
+                                                        e.currentTarget.style.display = 'none';
                                                     }}
                                                 />
 
                                                 <div className="absolute inset-0 bg-black/60 
-                        opacity-0 group-hover:opacity-100 
-                        transition-opacity duration-300
-                        flex flex-col items-center justify-center gap-2">
+                                      opacity-0 group-hover:opacity-100 
+                                      transition-opacity duration-300
+                                      flex flex-col items-center justify-center gap-2">
                                                     <div className="p-3 bg-red-600 rounded-full 
-                          group-hover:scale-110 transition-transform duration-300
-                          shadow-lg">
+                                        group-hover:scale-110 transition-transform duration-300
+                                        shadow-lg">
                                                         <Maximize2 className="w-5 h-5 text-white" strokeWidth={2.5} />
                                                     </div>
                                                     <span className="text-xs text-white font-bold uppercase tracking-wider">
