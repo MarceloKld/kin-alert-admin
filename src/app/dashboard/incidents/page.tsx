@@ -152,6 +152,24 @@ export default function IncidentsPage() {
     };
 
 
+    // Fonction pour corriger l'URL de l'image (Local vs Prod vs Cloudinary)
+    const getThumbnailUrl = (fichier: string) => {
+        if (!fichier) return '';
+
+        // Si c'est déjà une URL absolue (ex: Cloudinary), on la retourne directement
+        if (fichier.startsWith('http')) return fichier;
+
+        // Déterminer la base URL (Local ou Prod)
+        let baseUrl = process.env.NEXT_PUBLIC_STORAGE_URL || STORAGE_URL || '';
+        if (!baseUrl.endsWith('/')) baseUrl += '/';
+
+        // Nettoyer le chemin provenant de la BDD
+        const cleanFilePath = fichier.startsWith('/') ? fichier.substring(1) : fichier;
+
+        return `${baseUrl}${cleanFilePath}`;
+    };
+
+
     return (
         <div className="p-6 space-y-6">
             {/* AFFICHAGE DU TOAST */}
@@ -230,7 +248,7 @@ export default function IncidentsPage() {
                                                 <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 overflow-hidden shrink-0">
                                                     {incident.preuves && incident.preuves.length > 0 ? (
                                                         <img
-                                                            src={`${STORAGE_URL}${incident.preuves[0].fichier}`}
+                                                            src={getThumbnailUrl(incident.preuves[0].fichier)}
                                                             className="w-full h-full object-cover"
                                                             alt="Thumbnail"
                                                         />
