@@ -40,24 +40,25 @@ export default function MapView() {
         communeId: 0, // ✅ Changé de commune (string) à communeId (number)
         search: ''
     });
-
+   
     /* 
       ═══════════════════════════════════════════════════════════
       🖼️ FONCTION GÉNÉRATION URL (Corrigée)
       ═══════════════════════════════════════════════════════════
     */
     // Fonction pour générer l'URL correcte des images
-    const getImageUrl = (fichier: string): string => {
-        // ✅ VÉRIFIE http:// ET https://
+    const getImageUrl = (fichier?: string): string => {
+        if (!fichier) return '/placeholder-image.png'; // Ou une chaîne vide ''
+
         if (fichier.startsWith('http://') || fichier.startsWith('https://')) {
             return fichier;
         }
 
-        let baseUrl = process.env.NEXT_PUBLIC_STORAGE_URL || STORAGE_URL || '';
-        if (!baseUrl.endsWith('/')) baseUrl += '/';
+        let baseUrl = process.env.NEXT_PUBLIC_STORAGE_URL || '';
+        if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
         const cleanFilePath = fichier.startsWith('/') ? fichier.substring(1) : fichier;
-        return `${baseUrl}${cleanFilePath}`;
+        return `${baseUrl}/${cleanFilePath}`;
     };
 
     /* 
@@ -344,22 +345,20 @@ export default function MapView() {
                             {selectedIncident.preuves && selectedIncident.preuves.length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     {selectedIncident.preuves.map((preuve, i) => {
-                                        // ✅ UTILISE getImageUrl() pour gérer local ET Cloudinary
-                                        const imageUrl = getImageUrl(preuve.url);
+                                        // On récupère 'url' (API Publique) ou 'fichier' (API Admin)
+                                        const imagePath = (preuve as any).url || (preuve as any).fichier || '';
+                                        const imageUrl = getImageUrl(imagePath);
 
                                         return (
                                             <div
                                                 key={preuve.id}
-                                                className="group relative aspect-video rounded-xl overflow-hidden 
-                                 bg-white/5 border border-white/10 cursor-pointer"
+                                                className="group relative aspect-video rounded-xl overflow-hidden bg-white/5 border border-white/10 cursor-pointer"
                                                 onClick={() => setFullImage(imageUrl)}
                                             >
                                                 <img
                                                     src={imageUrl}
                                                     alt={`Preuve ${i + 1}`}
-                                                    className="w-full h-full object-cover 
-                                   transition-transform duration-500 
-                                   group-hover:scale-110"
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                     loading="lazy"
                                                     onError={(e) => {
                                                         console.error('❌ Erreur image:', imageUrl);
