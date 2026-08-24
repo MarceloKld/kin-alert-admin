@@ -47,18 +47,26 @@ export default function MapView() {
       ═══════════════════════════════════════════════════════════
     */
     // Fonction pour générer l'URL correcte des images
-    const getImageUrl = (fichier?: string): string => {
-        if (!fichier) return '/placeholder-image.png'; // Ou une chaîne vide ''
+    const getImageUrl = (path?: string): string => {
+        if (!path) return '';
 
-        if (fichier.startsWith('http://') || fichier.startsWith('https://')) {
-            return fichier;
+        // 1. Si l'URL contient Cloudinary (même imbriquée dans le domaine Render), on extrait la vraie URL Cloudinary
+        if (path.includes('https://res.cloudinary.com')) {
+            const cloudinaryIndex = path.indexOf('https://res.cloudinary.com');
+            return path.substring(cloudinaryIndex);
         }
 
+        // 2. Si c'est déjà une URL HTTP/HTTPS valide
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+
+        // 3. Sinon, ajouter l'URL du stockage de base (Render/Local)
         let baseUrl = process.env.NEXT_PUBLIC_STORAGE_URL || '';
         if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+        const cleanPath = path.startsWith('/') ? path.substring(1) : path;
 
-        const cleanFilePath = fichier.startsWith('/') ? fichier.substring(1) : fichier;
-        return `${baseUrl}/${cleanFilePath}`;
+        return `${baseUrl}/${cleanPath}`;
     };
 
     /* 
