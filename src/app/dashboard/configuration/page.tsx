@@ -103,30 +103,32 @@ export default function ConfigurationPage() {
     };
 
     return (
-        <div className="p-6 space-y-8 max-w-7xl mx-auto">
+        <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3 italic">
-                    <Database className="text-[#FF2424] w-8 h-8" />
+                <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3 italic">
+                    <Database className="text-[#FF2424] w-6 h-6 sm:w-8 sm:h-8 shrink-0" />
                     SYSTEM CONFIGURATION
                 </h1>
-                <p className="text-slate-500 text-sm mt-1 uppercase tracking-tighter">Gestion des entités et paramètres structurels</p>
+                <p className="text-slate-500 text-xs sm:text-sm mt-1 uppercase tracking-tighter">
+                    Gestion des entités et paramètres structurels
+                </p>
             </div>
 
-            {/* Onglets Premium */}
-            <div className="flex gap-4 border-b border-slate-800 pb-px">
+            {/* Onglets Premium Responsive */}
+            <div className="flex gap-2 sm:gap-4 border-b border-slate-800 pb-px overflow-x-auto whitespace-nowrap scrollbar-none">
                 {[
                     { id: 'villes', label: 'Villes', icon: MapPin },
                     { id: 'communes', label: 'Communes', icon: Home },
-                    { id: 'types', label: 'Types d\'incidents', icon: AlertTriangle },
+                    { id: 'types', label: "Types d'incidents", icon: AlertTriangle },
                 ].map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex items-center gap-2 px-6 py-3 text-sm font-bold transition-all relative ${activeTab === tab.id ? 'text-[#FF2424]' : 'text-slate-500 hover:text-white'
+                        className={`flex items-center gap-2 px-3 sm:px-6 py-3 text-xs sm:text-sm font-bold transition-all relative shrink-0 ${activeTab === tab.id ? 'text-[#FF2424]' : 'text-slate-500 hover:text-white'
                             }`}
                     >
-                        <tab.icon size={18} />
+                        <tab.icon size={16} className="sm:w-[18px] sm:h-[18px]" />
                         {tab.label.toUpperCase()}
                         {activeTab === tab.id && (
                             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF2424] shadow-[0_0_8px_#FF2424]" />
