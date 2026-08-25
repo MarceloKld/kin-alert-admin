@@ -14,7 +14,9 @@ import {
     ChevronLeft,
     ChevronRight,
     Cpu,
-    Search
+    Search,
+    ShieldAlert,
+    Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -22,131 +24,140 @@ import { fr } from 'date-fns/locale';
 export default function AuditClient() {
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [meta, setMeta] = useState({ total: 0, last_page: 1 });
     const [searchTerm, setSearchTerm] = useState("");
 
-    const fetchLogs = useCallback(async (pageNum: number) => {
+    // États de pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [totalLogs, setTotalLogs] = useState(0);
+
+    // 1. Déclaration de la fonction de chargement
+    const fetchLogs = useCallback(async (page: number) => {
         setLoading(true);
         try {
-            const res = await AuditService.getAll(pageNum);
-            // Si res est un tableau direct (cas de l'admin index selon ton endpoint)
-            // on l'adapte. Si c'est paginé (cas de user index), on prend .data
-            const data = Array.isArray(res) ? res : res.data;
-            setLogs(data);
-            if (!Array.isArray(res)) {
-                setMeta({ total: res.total, last_page: res.last_page });
-            }
+            const res = await AuditService.getAll(page);
+            setLogs(res.data);
+            setCurrentPage(res.current_page);
+            setLastPage(res.last_page);
+            setTotalLogs(res.total);
         } catch (error) {
-            showToast.error("Échec de récupération des logs d'audit");
+            console.error(error);
+            showToast.error("Erreur de chargement du journal d'audit");
         } finally {
             setLoading(false);
         }
     }, []);
 
+    // 2. Execution asynchrone sécurisée dans l'effet
     useEffect(() => {
-        const load = async () => {
-            await fetchLogs(page);
-        };
-        void load();
-    }, [page, fetchLogs]);
+        let isMounted = true;
 
-    // Fonction pour colorer l'action selon son importance
-    const getActionStyle = (action: string) => {
-        const a = action.toLowerCase();
-        if (a.includes('delete') || a.includes('supprim')) return 'text-red-500 bg-red-500/10 border-red-500/20';
-        if (a.includes('update') || a.includes('modif')) return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
-        if (a.includes('create') || a.includes('ajout')) return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
-        return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
+        const loadData = async () => {
+            if (isMounted) {
+                await fetchLogs(currentPage);
+            }
+        };
+
+        loadData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [currentPage, fetchLogs]);
+
+
+
+
+    const getRoleBadge = (role: string) => {
+        const isAdm = role.toLowerCase().includes('admin');
+        return (
+            <span className={`text-[9px] px-2 py-0.5 rounded border font-black uppercase tracking-tighter ${isAdm ? 'text-[#FF2424] bg-[#FF2424]/10 border-[#FF2424]/20' : 'text-purple-400 bg-purple-400/10 border-purple-400/20'
+                }`}>
+                {role}
+            </span>
+        );
     };
 
     return (
         <div className="p-4 md:p-8 space-y-6 max-w-[1600px] mx-auto">
 
-            {/* HEADER & KPI */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Titre & Stats */}
+            <div className="flex justify-between items-end border-b border-slate-800 pb-6">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3 italic">
                         <Terminal className="text-[#FF2424]" />
-                        JOURNAL D&apos;AUDIT
+                        SYSTEM AUDIT LOGS
                     </h1>
-                    <p className="text-slate-500 text-xs uppercase tracking-[0.3em] font-bold mt-1">
-                        Surveillance des actions système en temps réel
+                    <p className="text-slate-500 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">
+                        Traçabilité totale des opérations administratives
                     </p>
                 </div>
-
-                <div className="flex items-center gap-3 bg-[#141A28] border border-slate-800 p-2 rounded-xl">
-                    <Search size={18} className="text-slate-500 ml-2" />
-                    <input
-                        type="text"
-                        placeholder="Filtrer par action ou IP..."
-                        className="bg-transparent border-none outline-none text-white text-sm w-full md:w-64"
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="hidden md:block text-right">
+                    <p className="text-slate-500 text-[10px] uppercase font-bold">Total des entrées</p>
+                    <p className="text-2xl font-black text-white font-mono">{totalLogs.toLocaleString()}</p>
                 </div>
             </div>
 
-            {/* TABLEAU (PC) / CARTES (MOBILE) */}
-            <div className="bg-[#141A28] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            {/* Liste des logs */}
+            <div className="bg-[#141A28] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
+                {loading && (
+                    <div className="absolute inset-0 bg-[#080C14]/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                        <Loader2 className="animate-spin text-[#FF2424]" size={40} />
+                    </div>
+                )}
 
-                {/* VERSION PC : TABLEAU CLASSIQUE */}
-                <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-[#0F1523] border-b border-slate-800">
-                                <th className="p-4 text-[10px] font-black text-slate-500 uppercase">Timestamp</th>
-                                <th className="p-4 text-[10px] font-black text-slate-500 uppercase">Utilisateur</th>
-                                <th className="p-4 text-[10px] font-black text-slate-500 uppercase">Action</th>
-                                <th className="p-4 text-[10px] font-black text-slate-500 uppercase">Cible</th>
-                                <th className="p-4 text-[10px] font-black text-slate-500 uppercase">Adresse IP</th>
-                                <th className="p-4 text-[10px] font-black text-slate-500 uppercase text-right">Détails</th>
+                {/* TABLEAU PC */}
+                <div className="hidden lg:block overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-[#0F1523] text-slate-500 text-[10px] font-black uppercase tracking-widest border-b border-slate-800">
+                            <tr>
+                                <th className="p-5">Horodatage</th>
+                                <th className="p-5">Opérateur</th>
+                                <th className="p-5">Action Effectuée</th>
+                                <th className="p-5">Cible Système</th>
+                                <th className="p-5">Origine IP</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/50">
-                            {loading ? (
-                                Array(8).fill(0).map((_, i) => (
-                                    <tr key={i} className="animate-pulse">
-                                        <td colSpan={6} className="p-4 h-12 bg-slate-800/10"></td>
-                                    </tr>
-                                ))
-                            ) : logs.map((log) => (
-                                <tr key={log.id} className="hover:bg-slate-800/20 transition-colors group">
-                                    <td className="p-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-white text-sm font-medium">
-                                                {format(new Date(log.date_creation), 'dd/MM/yyyy')}
-                                            </span>
-                                            <span className="text-slate-500 text-[10px] font-mono">
-                                                {format(new Date(log.date_creation), 'HH:mm:ss')}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 bg-[#FF2424]/10 rounded-full flex items-center justify-center text-[#FF2424] text-[10px] font-bold">
-                                                ID{log.utilisateur_id}
+                            {logs.map((log) => (
+                                <tr key={log.id} className="hover:bg-white/2 transition-colors group">
+                                    <td className="p-5 whitespace-nowrap">
+                                        <div className="flex items-center gap-3">
+                                            <Clock size={14} className="text-slate-600" />
+                                            <div className="font-mono text-xs">
+                                                <span className="text-white block">{format(new Date(log.date_creation), 'dd/MM/yyyy')}</span>
+                                                <span className="text-slate-500">{format(new Date(log.date_creation), 'HH:mm:ss')}</span>
                                             </div>
-                                            <span className="text-slate-300 text-sm font-semibold">Staff #{log.utilisateur_id}</span>
                                         </div>
                                     </td>
-                                    <td className="p-4">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-tighter ${getActionStyle(log.action)}`}>
+                                    <td className="p-5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-[#080C14] border border-slate-700 rounded-lg flex items-center justify-center text-[10px] font-bold text-[#FF2424]">
+                                                {log.utilisateur.nom.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-white text-sm font-bold">{log.utilisateur.nom}</span>
+                                                {getRoleBadge(log.utilisateur.role)}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="p-5 text-xs font-bold text-slate-300">
+                                        <span className="bg-slate-800/50 px-2 py-1 rounded border border-slate-700 italic">
                                             {log.action}
                                         </span>
                                     </td>
-                                    <td className="p-4 text-slate-400 text-xs font-mono">
-                                        {log.cible} <span className="text-slate-600">({log.cible_id})</span>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-2 text-slate-500 text-xs">
-                                            <Globe size={12} className="text-blue-500" />
-                                            {log.ip_address}
+                                    <td className="p-5">
+                                        <div className="flex items-center gap-2">
+                                            <ShieldAlert size={14} className="text-slate-600" />
+                                            <span className="text-[11px] text-slate-400 font-mono">
+                                                {log.cible} <span className="text-slate-600">#{log.cible_id || 'N/A'}</span>
+                                            </span>
                                         </div>
                                     </td>
-                                    <td className="p-4 text-right">
-                                        <button className="p-2 hover:bg-slate-700 rounded-lg transition-all text-slate-500 hover:text-white">
-                                            <Activity size={16} />
-                                        </button>
+                                    <td className="p-5 font-mono text-[10px] text-slate-500">
+                                        <div className="flex items-center gap-2">
+                                            <Globe size={12} /> {log.ip_address}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -154,64 +165,56 @@ export default function AuditClient() {
                     </table>
                 </div>
 
-                {/* VERSION MOBILE : LISTE DE CARTES STYLISÉES */}
-                <div className="md:hidden divide-y divide-slate-800">
-                    {loading ? (
-                        <div className="p-4 text-center text-slate-500">Synchronisation des logs...</div>
-                    ) : logs.map((log) => (
-                        <div key={log.id} className="p-4 space-y-3 active:bg-slate-800/40 transition-colors">
-                            <div className="flex justify-between items-start">
-                                <div className="flex items-center gap-2">
-                                    <Clock size={12} className="text-[#FF2424]" />
-                                    <span className="text-white font-mono text-xs">
-                                        {format(new Date(log.date_creation), 'dd MMM HH:mm', { locale: fr })}
-                                    </span>
-                                </div>
-                                <span className={`px-2 py-0.5 rounded text-[9px] font-black border uppercase ${getActionStyle(log.action)}`}>
-                                    {log.action}
-                                </span>
+                {/* MOBILE VIEW (Cartes) */}
+                <div className="lg:hidden divide-y divide-slate-800">
+                    {logs.map((log) => (
+                        <div key={log.id} className="p-5 space-y-4">
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] font-mono text-slate-500">{log.date_creation}</span>
+                                {getRoleBadge(log.utilisateur.role)}
                             </div>
-
-                            <div className="text-sm text-slate-300 font-bold">
-                                Utilisateur <span className="text-[#FF2424]">#{log.utilisateur_id}</span> a modifié <span className="text-blue-400">{log.cible}</span>
+                            <div className="text-sm">
+                                <span className="text-white font-bold">{log.utilisateur.nom}</span>
+                                <span className="text-slate-500 ml-2">a fait</span>
+                                <span className="text-[#FF2424] ml-2 font-mono italic">{log.action}</span>
                             </div>
-
-                            <div className="flex items-center justify-between text-[10px] text-slate-500 bg-[#080C14] p-2 rounded-lg">
-                                <div className="flex items-center gap-1">
-                                    <Globe size={10} /> {log.ip_address}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <Cpu size={10} /> Terminal Mobile
-                                </div>
+                            <div className="text-[10px] text-slate-600 bg-[#080C14] p-3 rounded-xl flex justify-between">
+                                <span>Cible: {log.cible}</span>
+                                <span>IP: {log.ip_address}</span>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* PAGINATION LOGIC */}
-            {meta.last_page > 1 && (
-                <div className="flex items-center justify-between mt-4 px-2">
-                    <p className="text-[10px] text-slate-500 uppercase font-black">Total Logs: {meta.total}</p>
-                    <div className="flex items-center gap-2">
-                        <button
-                            disabled={page === 1}
-                            onClick={() => { setPage(p => p - 1); if (navigator.vibrate) navigator.vibrate(10); }}
-                            className="p-2 bg-[#141A28] border border-slate-800 rounded-lg disabled:opacity-20 text-white"
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
-                        <span className="text-white font-mono text-sm bg-[#FF2424] px-3 py-1 rounded-md shadow-[0_0_10px_rgba(255,36,36,0.2)]">
-                            {page}
-                        </span>
-                        <button
-                            disabled={page === meta.last_page}
-                            onClick={() => { setPage(p => p + 1); if (navigator.vibrate) navigator.vibrate(10); }}
-                            className="p-2 bg-[#141A28] border border-slate-800 rounded-lg disabled:opacity-20 text-white"
-                        >
-                            <ChevronRight size={20} />
-                        </button>
+            {/* PAGINATION PREMIUM */}
+            {lastPage > 1 && (
+                <div className="flex items-center justify-center gap-6 py-4">
+                    <button
+                        onClick={() => { setCurrentPage(p => p - 1); if (navigator.vibrate) navigator.vibrate(15); }}
+                        disabled={currentPage === 1 || loading}
+                        className="p-3 bg-[#141A28] border border-slate-800 rounded-2xl text-white hover:border-[#FF2424] disabled:opacity-10 transition-all active:scale-90 shadow-xl"
+                    >
+                        <ChevronLeft size={24} />
+                    </button>
+
+                    <div className="flex items-center gap-2 bg-[#141A28] p-1.5 rounded-2xl border border-slate-800">
+                        <div className="w-12 h-12 flex items-center justify-center bg-[#FF2424] text-white rounded-xl font-black shadow-[0_0_20px_rgba(255,36,36,0.3)]">
+                            {currentPage}
+                        </div>
+                        <span className="text-slate-600 font-bold px-2">/</span>
+                        <div className="w-12 h-12 flex items-center justify-center bg-[#080C14] text-slate-400 rounded-xl font-bold">
+                            {lastPage}
+                        </div>
                     </div>
+
+                    <button
+                        onClick={() => { setCurrentPage(p => p + 1); if (navigator.vibrate) navigator.vibrate(15); }}
+                        disabled={currentPage === lastPage || loading}
+                        className="p-3 bg-[#141A28] border border-slate-800 rounded-2xl text-white hover:border-[#FF2424] disabled:opacity-10 transition-all active:scale-90 shadow-xl"
+                    >
+                        <ChevronRight size={24} />
+                    </button>
                 </div>
             )}
         </div>
