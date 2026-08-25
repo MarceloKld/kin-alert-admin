@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ConfigService } from '@/services/config.service';
 import { Ville, Commune, IncidentType } from '@/types/config';
 import { showToast } from '@/lib/toast-utils';
-import { MapPin, Home, AlertTriangle, Plus, Database, ChevronRight, ChevronLeft } from 'lucide-react';
+import { MapPin, Home, AlertTriangle, Plus, Database, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
 import ConfigurationClient from "./ConfigurationClient";
 
 export default function ConfigurationPage() {
@@ -27,6 +27,7 @@ export default function ConfigurationPage() {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [lastPage, setLastPage] = useState<number>(1);
     const [totalCommunes, setTotalCommunes] = useState<number>(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
 
     useEffect(() => {
@@ -76,6 +77,8 @@ export default function ConfigurationPage() {
     };
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
+
         try {
             if (activeTab === 'villes') {
                 const res = await ConfigService.createVille(newItemName);
@@ -94,6 +97,8 @@ export default function ConfigurationPage() {
             setTypeDesc("");
         } catch (error) {
             showToast.error("Erreur lors de la création");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -178,8 +183,19 @@ export default function ConfigurationPage() {
                                 </div>
                             )}
 
-                            <button className="w-full bg-[#FF2424] hover:bg-[#D61F1F] text-white font-black py-4 rounded-xl shadow-lg shadow-[#FF2424]/20 transition-all active:scale-95">
-                                ENREGISTRER DANS LA BDD
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full bg-[#FF2424] hover:bg-[#D61F1F] disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-4 rounded-xl shadow-lg shadow-[#FF2424]/20 transition-all active:scale-95 flex items-center justify-center gap-2 tracking-wide"
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        ENREGISTREMENT...
+                                    </>
+                                ) : (
+                                    'VALIDER'
+                                )}
                             </button>
                         </form>
                     </div>
@@ -188,35 +204,69 @@ export default function ConfigurationPage() {
                 {/* Liste des données */}
                 <div className="lg:col-span-2 space-y-4">
                     {loading ? (
-                        <div className="animate-pulse flex flex-col gap-4">
-                            {[1, 2, 3].map(i => <div key={i} className="h-16 bg-[#141A28] rounded-xl border border-slate-800" />)}
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {safeList.map((item: any) => (
-                                <div key={item.id} className="bg-[#141A28] border border-slate-800 p-4 rounded-xl flex items-center justify-between group hover:border-slate-600 transition-all">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-[#080C14] flex items-center justify-center text-[#FF2424] font-bold">
-                                            {item.id}
-                                        </div>
-                                        <div>
-                                            <p className="text-white font-bold">{item.nom || item.titre}</p>
-                                            {activeTab === 'communes' && (
-                                                <p className="text-[10px] text-slate-500 uppercase tracking-widest">
-                                                    Ville ID: {item.ville_id}
-                                                </p>
-                                            )}
-                                            {activeTab === 'types' && (
-                                                <p className="text-xs text-slate-500 truncate w-40">{item.description}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <ChevronRight size={16} className="text-slate-700 group-hover:text-[#FF2424] transition-colors" />
-                                </div>
+                        // Skeleton loader pendant le chargement
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
+                            {[1, 2, 3, 4, 5, 6].map(i => (
+                                <div key={i} className="h-20 bg-[#141A28] rounded-2xl border border-slate-800" />
                             ))}
                         </div>
-                    )}
+                    ) : (() => {
+                        // Securisation de la liste selon l'onglet actif
+                        const rawList = activeTab === 'villes' ? villes : activeTab === 'communes' ? communes : types;
+                        const safeList = Array.isArray(rawList) ? rawList : [];
 
+                        if (safeList.length === 0) {
+                            return (
+                                <div className="text-center py-20 bg-[#141A28]/30 border border-dashed border-slate-800 rounded-3xl">
+                                    <Database className="mx-auto text-slate-700 mb-4" size={40} />
+                                    <p className="text-slate-500 font-mono text-xs uppercase tracking-widest">Aucune donnée enregistrée</p>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {safeList.map((item: any) => (
+                                    <div
+                                        key={item.id}
+                                        className="group bg-[#141A28] border border-slate-800 p-5 rounded-2xl flex items-center justify-between hover:border-[#FF2424]/40 transition-all duration-300 shadow-lg hover:shadow-[#FF2424]/5"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-[#080C14] flex items-center justify-center text-slate-500 font-mono text-xs border border-slate-800 group-hover:text-[#FF2424] group-hover:border-[#FF2424]/30 transition-all">
+                                                {String(item.id).padStart(2, '0')}
+                                            </div>
+
+                                            <div className="flex flex-col">
+                                                <span className="text-white font-bold tracking-tight text-sm md:text-base">
+                                                    {item.nom || item.titre}
+                                                </span>
+
+                                                {activeTab === 'communes' && (
+                                                    <div className="flex items-center gap-1.5 mt-1.5">
+                                                        <div className="w-1 h-1 bg-[#FF2424] rounded-full shadow-[0_0_5px_#FF2424]" />
+                                                        <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">
+                                                            {item.ville?.nom || villes.find(v => Number(v.id) === Number(item.ville_id))?.nom || "Ville Inconnue"}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {activeTab === 'types' && (
+                                                    <span className="text-[11px] text-slate-500 italic mt-1 line-clamp-1 w-40">
+                                                        {item.description}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="p-2 rounded-lg bg-[#080C14] opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                                            <ChevronRight size={14} className="text-[#FF2424]" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        );
+                    })()}
+               
                     {/* PAGINATION LOGIC */}
                     {activeTab === 'communes' && lastPage > 1 && (
                         <div className="flex items-center justify-center gap-6 mt-10 pt-6 border-t border-slate-800">

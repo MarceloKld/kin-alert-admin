@@ -208,18 +208,30 @@ export default function ConfigurationClient() {
                                 {(activeTab === 'villes' ? villes : activeTab === 'communes' ? communes : types).map((item: any) => (
                                     <div key={item.id} className="group bg-[#141A28]/50 border border-slate-800 p-5 rounded-2xl flex items-center justify-between hover:bg-[#141A28] transition-all border-l-2 hover:border-l-[#FF2424]">
                                         <div className="flex items-center gap-5">
+                                            {/* ID stylisé avec padding à gauche */}
                                             <div className="text-slate-700 font-mono text-sm group-hover:text-[#FF2424] transition-colors">
                                                 {String(item.id).padStart(3, '0')}
                                             </div>
+
                                             <div>
-                                                <h4 className="text-white font-bold text-lg leading-none">{item.nom || item.titre}</h4>
-                                                {activeTab === 'communes' && item.ville && (
+                                                {/* Titre principal (Nom de la commune, ville ou type) */}
+                                                <h4 className="text-white font-bold text-lg leading-none">
+                                                    {item.nom || item.titre}
+                                                </h4>
+
+                                                {/* AFFICHAGE DU NOM DE LA VILLE (Au lieu de l'ID) */}
+                                                {activeTab === 'communes' && (
                                                     <div className="flex items-center gap-2 mt-2">
-                                                        <span className="text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase font-bold tracking-widest">
-                                                            Province de {item.ville.nom}
-                                                        </span>
+                                                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#FF2424]/10 border border-[#FF2424]/20 rounded-full">
+                                                            <MapPin size={10} className="text-[#FF2424]" />
+                                                            <span className="text-[10px] text-[#FF2424] uppercase font-black tracking-widest">
+                                                                {/* On utilise item.ville?.nom pour éviter les crashs si ville est nulle */}
+                                                                {item.ville?.nom || "Ville non définie"}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 )}
+
                                                 {activeTab === 'types' && (
                                                     <p className="text-xs text-slate-500 mt-1 italic">{item.description}</p>
                                                 )}
@@ -229,6 +241,7 @@ export default function ConfigurationClient() {
                                     </div>
                                 ))}
                             </div>
+
 
                             {/* PAGINATION LOGIC */}
                             {activeTab === 'communes' && lastPage > 1 && (
