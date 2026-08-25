@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { NotificationService } from '@/services/notification.service';
 import { NotificationItem, NotificationResponse } from '@/types/notification';
 import { showToast } from '@/lib/toast-utils';
-import { Megaphone, Bell, Send, CheckCheck, Inbox, Clock, ShieldAlert, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Megaphone, Bell, Send, CheckCheck, Inbox, Clock, ShieldAlert, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -17,6 +17,7 @@ export default function NotificationsClient() {
     // ÉTATS POUR LA PAGINATION
     const [currentPage, setCurrentPage] = useState(1);
     const [paginationMeta, setPaginationMeta] = useState<NotificationResponse['meta'] | null>(null);
+    const [updatingId, setUpdatingId] = useState<number | null>(null);
 
     // Remplacer les lignes 21 à 37 par ceci :
 
@@ -36,6 +37,25 @@ export default function NotificationsClient() {
 
         loadNotifications();
     }, [currentPage]);
+    
+
+    // ... (Reste des fonctions handleMarkAsRead et handleBroadcast identiques) ...
+    const handleMarkAsRead = async (id: number) => {
+        setUpdatingId(id);
+        try {
+            await NotificationService.markAsRead(id);
+            setNotifications(prev =>
+                prev.map(n => (n.id === id ? { ...n, lu: true } : n))
+            );
+            if (typeof window !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate(20);
+            }
+        } catch (error) {
+            showToast.error("Erreur lors de la mise à jour");
+        } finally {
+            setUpdatingId(null);
+        }
+    };
 
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= (paginationMeta?.last_page || 1)) {
@@ -45,14 +65,7 @@ export default function NotificationsClient() {
         }
     };
 
-    // ... (Reste des fonctions handleMarkAsRead et handleBroadcast identiques) ...
-    const handleMarkAsRead = async (id: number) => {
-        try {
-            await NotificationService.markAsRead(id);
-            setNotifications(prev => prev.map(n => n.id === id ? { ...n, lu: true } : n));
-            if (navigator.vibrate) navigator.vibrate(20);
-        } catch (error) { showToast.error("Erreur"); }
-    };
+
 
     const handleBroadcast = async () => {
         if (!broadcastMsg.trim()) return;
@@ -127,8 +140,8 @@ export default function NotificationsClient() {
                                 <div
                                     key={notif.id}
                                     className={`group relative p-5 rounded-2xl border transition-all duration-300 ${notif.lu
-                                            ? 'bg-[#141A28]/40 border-slate-800/50 opacity-60'
-                                            : 'bg-[#141A28] border-slate-800 hover:border-[#FF2424]/40 shadow-xl'
+                                        ? 'bg-[#141A28]/40 border-slate-800/50 opacity-60'
+                                        : 'bg-[#141A28] border-slate-800 hover:border-[#FF2424]/40 shadow-xl'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start gap-4">
@@ -149,9 +162,15 @@ export default function NotificationsClient() {
                                         {!notif.lu && (
                                             <button
                                                 onClick={() => handleMarkAsRead(notif.id)}
-                                                className="p-2 bg-[#FF2424]/10 text-[#FF2424] rounded-lg hover:bg-[#FF2424] hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                                                disabled={updatingId === notif.id}
+                                                className="p-2 bg-[#FF2424]/10 text-[#FF2424] rounded-lg hover:bg-[#FF2424] hover:text-white transition-all opacity-0 group-hover:opacity-100 disabled:opacity-100 disabled:cursor-not-allowed"
+                                                title="Marquer comme lue"
                                             >
-                                                <CheckCheck size={16} />
+                                                {updatingId === notif.id ? (
+                                                    <Loader2 size={16} className="animate-spin" />
+                                                ) : (
+                                                    <CheckCheck size={16} />
+                                                )}
                                             </button>
                                         )}
                                     </div>

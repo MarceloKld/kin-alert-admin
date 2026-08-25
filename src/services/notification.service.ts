@@ -12,7 +12,7 @@ export const NotificationService = {
 
   // 2. Marquer comme lue
   markAsRead: async (id: number): Promise<{ message: string }> => {
-    const response = await api.get<{ message: string }>(
+    const response = await api.patch<{ message: string }>(
       `/notifications/${id}/read`,
     );
     return response.data;
