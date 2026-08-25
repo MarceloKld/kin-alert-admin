@@ -30,6 +30,9 @@ fixLeafletIcons();
 const KINSHASA_CENTER: [number, number] = [-4.3276, 15.3136];
 
 export default function MapView() {
+    //  Placez le hook ICI, à l'intérieur de la fonction
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
+
     const [incidents, setIncidents] = useState<IncidentPublic[]>([]);
     const [communes, setCommunes] = useState<Array<{ id: number; nom: string }>>([]);
     const [loading, setLoading] = useState(true);
@@ -37,7 +40,7 @@ export default function MapView() {
     const [fullImage, setFullImage] = useState<string | null>(null);
     const [filters, setFilters] = useState({
         statut: 'tous',
-        communeId: 0, // ✅ Changé de commune (string) à communeId (number)
+        communeId: 0,
         search: ''
     });
    
@@ -175,27 +178,50 @@ export default function MapView() {
                     />
                 </div>
             )}
-            {/* 
-        ═══════════════════════════════════════════════════════
-        🎛️ PANEL FILTRES
-        ═══════════════════════════════════════════════════════
-      */}
-            <div className="absolute top-4 left-4 z-[999] 
-                    bg-black/70 backdrop-blur-xl border border-white/10 
-                    rounded-2xl p-4 space-y-4 w-80 shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto">
+            {/* ═══════════════════════════════════════════════════════
+    🎛️ PANEL FILTRES (RESPONSIVE)
+    ═══════════════════════════════════════════════════════ */}
 
+            {/* Bouton Toggle Mobile (décalé à left-14 pour dégager le zoom sur mobile) */}
+            <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="sm:hidden absolute top-4 left-14 z-20 bg-black/80 backdrop-blur-xl border border-white/10 text-white p-2.5 rounded-xl flex items-center gap-2 shadow-xl font-bold text-xs uppercase"
+            >
+                <Filter className="w-4 h-4 text-red-500" />
+                {showMobileFilters ? "Masquer" : "Filtres"}
+            </button>
+
+            {/* Conteneur Filtres (sm:left-16 décale le panneau après le zoom Leaflet sur PC) */}
+            <div className={`
+    absolute top-16 sm:top-4 left-4 right-4 sm:right-auto sm:left-16 z-20
+    bg-black/80 backdrop-blur-xl border border-white/10 
+    rounded-2xl p-4 space-y-4 w-auto sm:w-80 shadow-2xl 
+    max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-2rem)] overflow-y-auto
+    transition-all duration-300
+    ${showMobileFilters ? 'block' : 'hidden sm:block'}
+`}>
                 <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-white uppercase flex items-center gap-2">
                         <Filter className="w-4 h-4 text-red-500" />
                         Filtres
                     </h3>
-                    <button
-                        onClick={() => setFilters({ statut: 'tous', communeId: 0, search: '' })}
-                        className="p-1.5 hover:bg-white/10 rounded-lg transition-all"
-                        title="Réinitialiser"
-                    >
-                        <RefreshCcw className="w-4 h-4 text-gray-400 hover:text-white" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={() => setFilters({ statut: 'tous', communeId: 0, search: '' })}
+                            className="p-1.5 hover:bg-white/10 rounded-lg transition-all"
+                            title="Réinitialiser"
+                        >
+                            <RefreshCcw className="w-4 h-4 text-gray-400 hover:text-white" />
+                        </button>
+
+                        {/* Bouton fermer sur mobile */}
+                        <button
+                            onClick={() => setShowMobileFilters(false)}
+                            className="sm:hidden p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Recherche */}
@@ -209,13 +235,13 @@ export default function MapView() {
                         value={filters.search}
                         onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                         className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 
-                     text-sm text-white placeholder:text-gray-500
-                     focus:border-red-500 focus:ring-1 focus:ring-red-500 
-                     outline-none transition-all"
+                       text-sm text-white placeholder:text-gray-500
+                       focus:border-red-500 focus:ring-1 focus:ring-red-500 
+                       outline-none transition-all"
                     />
                 </div>
 
-                {/* ✅ FILTRE COMMUNE (par ID) */}
+                {/* FILTRE COMMUNE */}
                 <div>
                     <label className="text-xs text-gray-400 font-semibold uppercase block mb-2">
                         Commune
@@ -224,9 +250,9 @@ export default function MapView() {
                         value={filters.communeId}
                         onChange={(e) => setFilters(prev => ({ ...prev, communeId: Number(e.target.value) }))}
                         className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 
-                     text-sm text-white 
-                     focus:border-red-500 focus:ring-1 focus:ring-red-500 
-                     outline-none transition-all cursor-pointer"
+                       text-sm text-white 
+                       focus:border-red-500 focus:ring-1 focus:ring-red-500 
+                       outline-none transition-all cursor-pointer"
                     >
                         <option value={0} className="bg-gray-900">Toutes les communes</option>
                         {communes.map((commune) => (
@@ -237,7 +263,7 @@ export default function MapView() {
                     </select>
                 </div>
 
-                {/* ✅ FILTRE STATUT */}
+                {/* FILTRE STATUT */}
                 <div>
                     <label className="text-xs text-gray-400 font-semibold uppercase block mb-2">
                         Statut
@@ -246,9 +272,9 @@ export default function MapView() {
                         value={filters.statut}
                         onChange={(e) => setFilters(prev => ({ ...prev, statut: e.target.value }))}
                         className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 
-                     text-sm text-white 
-                     focus:border-red-500 focus:ring-1 focus:ring-red-500 
-                     outline-none transition-all cursor-pointer"
+                       text-sm text-white 
+                       focus:border-red-500 focus:ring-1 focus:ring-red-500 
+                       outline-none transition-all cursor-pointer"
                     >
                         <option value="tous" className="bg-gray-900">Tous les statuts</option>
                         <option value="en_attente" className="bg-gray-900">⏳ En attente</option>
