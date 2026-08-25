@@ -12,7 +12,8 @@ import {
     Shield,
     X,
     Map,
-    Sliders // 1. Nouvelle icône ajoutée ici
+    Sliders,
+    History // 1. Nouvelle icône ajoutée ici
 } from "lucide-react";
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,7 +50,6 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
             roles: ["administrateur", "gestionnaire"],
             badge: "NEW"
         },
-        // 2. NOUVEAU MENU CONFIGURATION AJOUTÉ ICI
         {
             name: "Configuration",
             href: "/dashboard/configuration",
@@ -67,6 +67,13 @@ export default function Sidebar({ isMobile, closeMenu }: SidebarProps) {
             href: "/dashboard/notifications",
             icon: Bell,
             roles: ["administrateur", "gestionnaire"]
+        },
+        // 🔒 MENU AUDIT (Réservé uniquement aux administrateurs)
+        {
+            name: "Journal d'Audit",
+            href: "/dashboard/audit",
+            icon: History,
+            roles: ["administrateur"]
         },
         {
             name: "Paramètres",
