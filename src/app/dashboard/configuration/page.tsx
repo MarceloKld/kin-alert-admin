@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { ConfigService } from '@/services/config.service';
 import { Ville, Commune, IncidentType } from '@/types/config';
 import { showToast } from '@/lib/toast-utils';
-import { MapPin, Home, AlertTriangle, Plus, Database, ChevronRight } from 'lucide-react';
+import { MapPin, Home, AlertTriangle, Plus, Database, ChevronRight, ChevronLeft } from 'lucide-react';
+import ConfigurationClient from "./ConfigurationClient";
 
 export default function ConfigurationPage() {
     const [activeTab, setActiveTab] = useState<'villes' | 'communes' | 'types'>('villes');
@@ -19,6 +20,14 @@ export default function ConfigurationPage() {
     const [newItemName, setNewItemName] = useState("");
     const [selectedVilleId, setSelectedVilleId] = useState<number>(0);
     const [typeDesc, setTypeDesc] = useState("");
+    const currentList = activeTab === 'villes' ? villes : activeTab === 'communes' ? communes : types;
+    const safeList = Array.isArray(currentList) ? currentList : (currentList as any)?.data || [];
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [lastPage, setLastPage] = useState<number>(1);
+    const [totalCommunes, setTotalCommunes] = useState<number>(0);
+
 
     useEffect(() => {
         const loadData = async () => {
@@ -26,22 +35,45 @@ export default function ConfigurationPage() {
             try {
                 const [v, c, t] = await Promise.all([
                     ConfigService.getVilles(),
-                    ConfigService.getCommunes(),
+                    ConfigService.getCommunes(1),
                     ConfigService.getIncidentTypes()
                 ]);
-                setVilles(v);
-                setCommunes(c);
-                setTypes(t);
+
+                setVilles(Array.isArray(v) ? v : []);
+
+                // Extraction des données de communes et de pagination
+                const cList = Array.isArray(c) ? c : (c?.data || []);
+                setCommunes(cList);
+                setCurrentPage(c?.current_page || 1);
+                setLastPage(c?.last_page || 1);
+                setTotalCommunes(c?.total || cList.length);
+
+                setTypes(Array.isArray(t) ? t : []);
             } catch (error) {
                 showToast.error("Erreur de chargement des données");
             } finally {
                 setLoading(false);
             }
         };
-
         loadData();
     }, []);
-
+    
+   
+    const handlePageChange = async (newPage: number) => {
+        if (newPage < 1 || newPage > lastPage || loading) return;
+        setLoading(true);
+        try {
+            const res = await ConfigService.getCommunes(newPage);
+            const cList = Array.isArray(res) ? res : (res?.data || []);
+            setCommunes(cList);
+            setCurrentPage(res?.current_page || newPage);
+            setLastPage(res?.last_page || 1);
+        } catch (error) {
+            showToast.error("Erreur lors du changement de page");
+        } finally {
+            setLoading(false);
+        }
+    };
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -161,7 +193,7 @@ export default function ConfigurationPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {(activeTab === 'villes' ? villes : activeTab === 'communes' ? communes : types).map((item: any) => (
+                                {safeList.map((item: any) => (
                                 <div key={item.id} className="bg-[#141A28] border border-slate-800 p-4 rounded-xl flex items-center justify-between group hover:border-slate-600 transition-all">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-lg bg-[#080C14] flex items-center justify-center text-[#FF2424] font-bold">
@@ -184,8 +216,39 @@ export default function ConfigurationPage() {
                             ))}
                         </div>
                     )}
+
+                    {/* PAGINATION LOGIC */}
+                    {activeTab === 'communes' && lastPage > 1 && (
+                        <div className="flex items-center justify-center gap-6 mt-10 pt-6 border-t border-slate-800">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1 || loading}
+                                className="p-3 bg-[#141A28] border border-slate-800 rounded-xl disabled:opacity-10 hover:border-[#FF2424] transition-all"
+                            >
+                                <ChevronLeft className="text-white" />
+                            </button>
+
+                            <div className="flex items-center gap-3">
+                                <span className="w-10 h-10 flex items-center justify-center bg-[#FF2424] text-white rounded-lg font-black shadow-[0_0_15px_rgba(255,36,36,0.3)]">
+                                    {currentPage}
+                                </span>
+                                <span className="text-slate-600 font-bold">/</span>
+                                <span className="text-slate-400 font-bold">{lastPage}</span>
+                            </div>
+
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === lastPage || loading}
+                                className="p-3 bg-[#141A28] border border-slate-800 rounded-xl disabled:opacity-10 hover:border-[#FF2424] transition-all"
+                            >
+                                <ChevronRight className="text-white" />
+                            </button>
+                        </div>
+                    )}
+                </div>
                 </div>
             </div>
-        </div>
+      
     );
+   
 }
