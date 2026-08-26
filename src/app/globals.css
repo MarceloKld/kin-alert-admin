@@ -408,3 +408,21 @@ body {
 .animate-progress {
   animation: progress 2s ease-in-out infinite;
 }
+
+
+/* ============================================ */
+/* ⚙️ ANIMATION SPIN SLOW — Icône Settings */
+/* ============================================ */
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
