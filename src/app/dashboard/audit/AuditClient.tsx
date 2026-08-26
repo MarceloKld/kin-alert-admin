@@ -16,7 +16,9 @@ import {
     Cpu,
     Search,
     ShieldAlert,
-    Loader2
+    Loader2,
+    Target,
+    Database,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -79,143 +81,560 @@ export default function AuditClient() {
     };
 
     return (
-        <div className="p-4 md:p-8 space-y-6 max-w-[1600px] mx-auto">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px] mx-auto">
 
-            {/* Titre & Stats */}
-            <div className="flex justify-between items-end border-b border-slate-800 pb-6">
-                <div>
-                    <h1 className="text-2xl font-black text-white flex items-center gap-3 italic">
-                        <Terminal className="text-[#FF2424]" />
-                        SYSTEM AUDIT LOGS
-                    </h1>
-                    <p className="text-slate-500 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">
+            {/* ========================================== */}
+            {/* 📌 HEADER - Titre, description et stats */}
+            {/* ========================================== */}
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 sm:gap-6 pb-6 border-b border-slate-800/60">
+
+                {/* Section titre et description */}
+                <div className="space-y-2 flex-1">
+
+                    {/* Titre principal avec icône */}
+                    <div className="flex items-center gap-3 animate-fade-in-down">
+
+                        {/* Icône Terminal avec effet glow animé */}
+                        <div className="relative">
+                            {/* Glow externe pulsant */}
+                            <div className="absolute inset-0 bg-[#FF2424] opacity-20 blur-xl rounded-full animate-pulse" />
+
+                            {/* Glow moyen qui scale */}
+                            <div className="absolute inset-0 bg-[#FF2424] opacity-30 blur-md rounded-full animate-ping-slow" />
+
+                            {/* Icône principale */}
+                            <Terminal className="relative text-[#FF2424] w-7 h-7 sm:w-8 sm:h-8 shrink-0 drop-shadow-[0_0_12px_rgba(255,36,36,0.6)] animate-pulse-slow" />
+                        </div>
+
+                        {/* Titre */}
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                            System Audit Logs
+                        </h1>
+                    </div>
+
+                    {/* Sous-titre / Description */}
+                    <p className="text-slate-400 text-xs sm:text-sm pl-10 sm:pl-11 animate-fade-in-up animation-delay-100">
                         Traçabilité totale des opérations administratives
                     </p>
                 </div>
-                <div className="hidden md:block text-right">
-                    <p className="text-slate-500 text-[10px] uppercase font-bold">Total des entrées</p>
-                    <p className="text-2xl font-black text-white font-mono">{totalLogs.toLocaleString()}</p>
-                </div>
-            </div>
 
-            {/* Liste des logs */}
-            <div className="bg-[#141A28] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
+                {/* ========================================== */}
+                {/* 📈 STAT CARD - Total des entrées */}
+                {/* ========================================== */}
+                <div className="w-full sm:w-auto animate-fade-in-left animation-delay-200">
+                    <div className="
+                relative
+                bg-slate-900/50 backdrop-blur-sm
+                border border-slate-800/60
+                rounded-xl
+                px-5 py-4
+                shadow-lg
+                overflow-hidden
+            ">
+                        {/* Gradient décoratif */}
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#FF2424]/10 to-transparent blur-2xl opacity-50" />
+
+                        {/* Contenu */}
+                        <div className="relative space-y-1">
+                            {/* Label */}
+                            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wide">
+                                Total des entrées
+                            </p>
+
+                            {/* Valeur */}
+                            <p className="text-3xl sm:text-4xl font-bold text-white tabular-nums">
+                                {totalLogs.toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            {/* CONTAINER - Liste des logs */}
+            <div className="relative min-h-[250px] bg-slate-900/50 backdrop-blur-sm border border-slate-800/60 rounded-3xl overflow-hidden shadow-2xl">
+
+                {/* OVERLAY LOADING - État de chargement */}
                 {loading && (
-                    <div className="absolute inset-0 bg-[#080C14]/50 backdrop-blur-sm z-10 flex items-center justify-center">
-                        <Loader2 className="animate-spin text-[#FF2424]" size={40} />
+                    <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-10 flex flex-col items-center justify-center animate-fade-in p-6">
+                        <div className="flex flex-col items-center gap-4 max-w-xs w-full">
+                            {/* Spinner avec glow */}
+                            <div className="relative">
+                                {/* Glow externe */}
+                                <div className="absolute inset-0 bg-[#FF2424] opacity-30 blur-2xl rounded-full animate-pulse" />
+
+                                {/* Spinner */}
+                                <Loader2 className="relative animate-spin text-[#FF2424] w-10 h-10 sm:w-12 sm:h-12 drop-shadow-[0_0_12px_rgba(255,36,36,0.6)]" />
+                            </div>
+
+                            {/* Texte de chargement */}
+                            <p className="text-slate-400 text-sm font-semibold animate-pulse">
+                                Chargement des logs...
+                            </p>
+
+                            {/* Barre de progression */}
+                            <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-[#FF2424] to-[#FF6B6B] animate-progress" />
+                            </div>
+                        </div>
                     </div>
                 )}
-
-                {/* TABLEAU PC */}
+                {/* ========================================== */}
+                {/* 💻 TABLEAU DESKTOP - Vue complète */}
+                {/* ========================================== */}
                 <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-[#0F1523] text-slate-500 text-[10px] font-black uppercase tracking-widest border-b border-slate-800">
+
+                        {/* ========================================== */}
+                        {/* 📋 THEAD - En-têtes de colonnes */}
+                        {/* ========================================== */}
+                        <thead className="bg-slate-950/80 text-slate-400 text-xs font-semibold uppercase tracking-wide border-b border-slate-800/60">
                             <tr>
-                                <th className="p-5">Horodatage</th>
-                                <th className="p-5">Opérateur</th>
-                                <th className="p-5">Action Effectuée</th>
-                                <th className="p-5">Cible Système</th>
-                                <th className="p-5">Origine IP</th>
+                                <th className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="w-4 h-4 text-slate-500" />
+                                        <span>Horodatage</span>
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        <User className="w-4 h-4 text-slate-500" />
+                                        <span>Opérateur</span>
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        <Activity className="w-4 h-4 text-slate-500" />
+                                        <span>Action</span>
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        <Target className="w-4 h-4 text-slate-500" />
+                                        <span>Cible</span>
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        <Globe className="w-4 h-4 text-slate-500" />
+                                        <span>Origine IP</span>
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/50">
-                            {logs.map((log) => (
-                                <tr key={log.id} className="hover:bg-white/2 transition-colors group">
-                                    <td className="p-5 whitespace-nowrap">
-                                        <div className="flex items-center gap-3">
-                                            <Clock size={14} className="text-slate-600" />
-                                            <div className="font-mono text-xs">
-                                                <span className="text-white block">{format(new Date(log.date_creation), 'dd/MM/yyyy')}</span>
-                                                <span className="text-slate-500">{format(new Date(log.date_creation), 'HH:mm:ss')}</span>
+
+                        {/* ========================================== */}
+                        {/* 📊 TBODY - Lignes de données */}
+                        {/* ========================================== */}
+                        <tbody className="divide-y divide-slate-800/40">
+                            {logs.length === 0 ? (
+                                /* Empty state dans le tableau */
+                                <tr>
+                                    <td colSpan={5} className="py-20">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <div className="relative mb-4">
+                                                <div className="absolute inset-0 bg-slate-700/20 blur-2xl rounded-full animate-pulse" />
+                                                <Database className="relative text-slate-700 w-12 h-12" />
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-5">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-[#080C14] border border-slate-700 rounded-lg flex items-center justify-center text-[10px] font-bold text-[#FF2424]">
-                                                {log.utilisateur.nom.substring(0, 2).toUpperCase()}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-white text-sm font-bold">{log.utilisateur.nom}</span>
-                                                {getRoleBadge(log.utilisateur.role)}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-5 text-xs font-bold text-slate-300">
-                                        <span className="bg-slate-800/50 px-2 py-1 rounded border border-slate-700 italic">
-                                            {log.action}
-                                        </span>
-                                    </td>
-                                    <td className="p-5">
-                                        <div className="flex items-center gap-2">
-                                            <ShieldAlert size={14} className="text-slate-600" />
-                                            <span className="text-[11px] text-slate-400 font-mono">
-                                                {log.cible} <span className="text-slate-600">#{log.cible_id || 'N/A'}</span>
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-5 font-mono text-[10px] text-slate-500">
-                                        <div className="flex items-center gap-2">
-                                            <Globe size={12} /> {log.ip_address}
+                                            <p className="text-slate-500 font-semibold text-sm">
+                                                Aucun log disponible
+                                            </p>
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                logs.map((log, index) => (
+                                    <tr
+                                        key={log.id}
+                                        className="
+                            group
+                            hover:bg-slate-800/30
+                            transition-all duration-200
+                            animate-fade-in-up
+                        "
+                                        style={{
+                                            animationDelay: `${index * 30}ms`
+                                        }}
+                                    >
+                                        {/* ========================================== */}
+                                        {/* 🕐 COLONNE HORODATAGE */}
+                                        {/* ========================================== */}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-3">
+                                                {/* Icône Clock */}
+                                                <div className="shrink-0 w-8 h-8 bg-slate-900/50 border border-slate-700/60 rounded-lg flex items-center justify-center">
+                                                    <Clock className="w-4 h-4 text-slate-500" />
+                                                </div>
+
+                                                {/* Date et heure */}
+                                                <div className="font-mono text-xs">
+                                                    <time
+                                                        dateTime={log.date_creation}
+                                                        className="text-white font-semibold block"
+                                                    >
+                                                        {format(new Date(log.date_creation), 'dd/MM/yyyy')}
+                                                    </time>
+                                                    <span className="text-slate-500 text-[10px]">
+                                                        {format(new Date(log.date_creation), 'HH:mm:ss')}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        {/* ========================================== */}
+                                        {/* 👤 COLONNE OPÉRATEUR */}
+                                        {/* ========================================== */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                {/* Avatar avec initiales */}
+                                                <div className="
+                                    shrink-0 w-9 h-9
+                                    bg-[#FF2424]/10
+                                    border border-[#FF2424]/30
+                                    rounded-xl
+                                    flex items-center justify-center
+                                    text-xs font-bold text-[#FF2424]
+                                    group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-[#FF2424]/20
+                                    transition-all duration-200
+                                ">
+                                                    {log.utilisateur.nom.substring(0, 2).toUpperCase()}
+                                                </div>
+
+                                                {/* Nom et rôle */}
+                                                <div className="flex flex-col">
+                                                    <span className="text-white text-sm font-semibold">
+                                                        {log.utilisateur.nom}
+                                                    </span>
+                                                    {getRoleBadge(log.utilisateur.role)}
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        {/* ========================================== */}
+                                        {/* ⚡ COLONNE ACTION */}
+                                        {/* ========================================== */}
+                                        <td className="px-6 py-4">
+                                            <span className="
+                                inline-flex items-center
+                                px-3 py-1.5
+                                bg-slate-800/50
+                                border border-slate-700/60
+                                rounded-lg
+                                text-xs font-semibold text-slate-200
+                                group-hover:border-[#FF2424]/30
+                                transition-colors duration-200
+                            ">
+                                                {log.action}
+                                            </span>
+                                        </td>
+
+                                        {/* ========================================== */}
+                                        {/* 🎯 COLONNE CIBLE */}
+                                        {/* ========================================== */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <ShieldAlert className="w-4 h-4 text-slate-500 shrink-0" />
+                                                <span className="text-xs text-slate-300 font-medium">
+                                                    {log.cible}
+                                                </span>
+                                                {log.cible_id && (
+                                                    <span className="
+                                        px-2 py-0.5
+                                        bg-slate-900/50
+                                        border border-slate-700/60
+                                        rounded
+                                        text-[10px] text-slate-500 font-mono
+                                    ">
+                                                        #{log.cible_id}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+
+                                        {/* ========================================== */}
+                                        {/* 🌐 COLONNE IP */}
+                                        {/* ========================================== */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2 font-mono text-xs text-slate-400">
+                                                <Globe className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                                <span className="group-hover:text-slate-300 transition-colors">
+                                                    {log.ip_address}
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
 
-                {/* MOBILE VIEW (Cartes) */}
-                <div className="lg:hidden divide-y divide-slate-800">
-                    {logs.map((log) => (
-                        <div key={log.id} className="p-5 space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-mono text-slate-500">{log.date_creation}</span>
-                                {getRoleBadge(log.utilisateur.role)}
+
+
+                {/* ========================================== */}
+                {/* 📱 MOBILE VIEW - Cartes empilées */}
+                {/* ========================================== */}
+                <div className="lg:hidden divide-y divide-slate-800/40">
+                    {logs.length === 0 ? (
+                        /* ========================================== */
+                        /* 📭 EMPTY STATE - Aucun log */
+                        /* ========================================== */
+                        <div className="flex flex-col items-center justify-center py-16 px-6">
+                            <div className="relative mb-4">
+                                <div className="absolute inset-0 bg-slate-700/20 blur-2xl rounded-full animate-pulse" />
+                                <Database className="relative text-slate-700 w-12 h-12" />
                             </div>
-                            <div className="text-sm">
-                                <span className="text-white font-bold">{log.utilisateur.nom}</span>
-                                <span className="text-slate-500 ml-2">a fait</span>
-                                <span className="text-[#FF2424] ml-2 font-mono italic">{log.action}</span>
-                            </div>
-                            <div className="text-[10px] text-slate-600 bg-[#080C14] p-3 rounded-xl flex justify-between">
-                                <span>Cible: {log.cible}</span>
-                                <span>IP: {log.ip_address}</span>
-                            </div>
+                            <p className="text-slate-500 font-semibold text-sm text-center">
+                                Aucun log disponible
+                            </p>
                         </div>
-                    ))}
+                    ) : (
+                        logs.map((log, index) => (
+                            <article
+                                key={log.id}
+                                className="
+                    p-5 space-y-4
+                    hover:bg-slate-800/20
+                    transition-colors duration-200
+                    animate-fade-in-up
+                "
+                                style={{
+                                    animationDelay: `${index * 40}ms`
+                                }}
+                            >
+                                {/* ========================================== */}
+                                {/* 🕐 EN-TÊTE - Date et rôle */}
+                                {/* ========================================== */}
+                                <div className="flex justify-between items-center gap-3">
+                                    {/* Horodatage */}
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                        <time
+                                            dateTime={log.date_creation}
+                                            className="text-xs font-mono text-slate-400 truncate"
+                                        >
+                                            {format(new Date(log.date_creation), 'dd/MM/yyyy HH:mm:ss')}
+                                        </time>
+                                    </div>
+
+                                    {/* Badge de rôle */}
+                                    <div className="shrink-0">
+                                        {getRoleBadge(log.utilisateur.role)}
+                                    </div>
+                                </div>
+
+                                {/* ========================================== */}
+                                {/* 👤 CONTENU - Utilisateur et action */}
+                                {/* ========================================== */}
+                                <div className="flex items-start gap-3">
+                                    {/* Avatar avec initiales */}
+                                    <div className="
+                        shrink-0 w-10 h-10
+                        bg-[#FF2424]/10
+                        border border-[#FF2424]/30
+                        rounded-xl
+                        flex items-center justify-center
+                        text-xs font-bold text-[#FF2424]
+                    ">
+                                        {log.utilisateur.nom.substring(0, 2).toUpperCase()}
+                                    </div>
+
+                                    {/* Informations */}
+                                    <div className="flex-1 min-w-0 space-y-1.5">
+                                        {/* Nom de l'utilisateur */}
+                                        <p className="text-white text-sm font-semibold truncate">
+                                            {log.utilisateur.nom}
+                                        </p>
+
+                                        {/* Action effectuée */}
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-xs text-slate-500">
+                                                a effectué
+                                            </span>
+                                            <span className="
+                                inline-flex items-center
+                                px-2 py-1
+                                bg-[#FF2424]/10
+                                border border-[#FF2424]/20
+                                rounded-lg
+                                text-xs font-semibold text-[#FF2424]
+                            ">
+                                                {log.action}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* ========================================== */}
+                                {/* 📊 MÉTADONNÉES - Cible et IP */}
+                                {/* ========================================== */}
+                                <div className="
+                    bg-slate-950/50
+                    border border-slate-800/60
+                    rounded-xl
+                    p-3
+                    space-y-2.5
+                ">
+                                    {/* Cible système */}
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <ShieldAlert className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                            <span className="text-[10px] text-slate-500 uppercase font-semibold tracking-wide">
+                                                Cible
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <span className="text-xs text-slate-300 font-medium truncate">
+                                                {log.cible}
+                                            </span>
+                                            {log.cible_id && (
+                                                <span className="
+                                    shrink-0
+                                    px-1.5 py-0.5
+                                    bg-slate-900/80
+                                    border border-slate-700/60
+                                    rounded
+                                    text-[10px] text-slate-500 font-mono
+                                ">
+                                                    #{log.cible_id}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Séparateur */}
+                                    <div className="h-px bg-slate-800/60" />
+
+                                    {/* Adresse IP */}
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2">
+                                            <Globe className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                            <span className="text-[10px] text-slate-500 uppercase font-semibold tracking-wide">
+                                                Origine IP
+                                            </span>
+                                        </div>
+                                        <span className="text-xs text-slate-300 font-mono truncate">
+                                            {log.ip_address}
+                                        </span>
+                                    </div>
+                                </div>
+                            </article>
+                        ))
+                    )}
                 </div>
             </div>
 
-            {/* PAGINATION PREMIUM */}
+            {/* ========================================== */}
+            {/* 📄 PAGINATION PREMIUM - Navigation pages */}
+            {/* ========================================== */}
             {lastPage > 1 && (
-                <div className="flex items-center justify-center gap-6 py-4">
+                <nav
+                    className="flex items-center justify-center gap-3 sm:gap-6 py-4 animate-fade-in-up"
+                    aria-label="Pagination des logs d'audit"
+                >
+                    {/* ========================================== */}
+                    {/* ⬅️ BOUTON PRÉCÉDENT */}
+                    {/* ========================================== */}
                     <button
-                        onClick={() => { setCurrentPage(p => p - 1); if (navigator.vibrate) navigator.vibrate(15); }}
+                        onClick={() => {
+                            setCurrentPage(p => p - 1);
+                            // Retour haptique léger sur mobile (logique conservée)
+                            if (navigator.vibrate) navigator.vibrate(15);
+                        }}
                         disabled={currentPage === 1 || loading}
-                        className="p-3 bg-[#141A28] border border-slate-800 rounded-2xl text-white hover:border-[#FF2424] disabled:opacity-10 transition-all active:scale-90 shadow-xl"
+                        aria-label="Page précédente"
+                        className="
+                group
+                p-3 sm:p-3.5
+                bg-slate-900/50 backdrop-blur-sm
+                border border-slate-800/60
+                rounded-2xl
+                text-slate-400
+                shadow-lg
+                hover:border-[#FF2424]/60 hover:text-[#FF2424] hover:bg-slate-900/70
+                hover:shadow-xl hover:shadow-[#FF2424]/10
+                disabled:opacity-20 disabled:cursor-not-allowed
+                disabled:hover:border-slate-800/60 disabled:hover:text-slate-400 disabled:hover:bg-slate-900/50
+                transition-all duration-200
+                active:scale-90
+            "
                     >
-                        <ChevronLeft size={24} />
+                        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 group-hover:-translate-x-0.5 transition-transform duration-200" />
                     </button>
 
-                    <div className="flex items-center gap-2 bg-[#141A28] p-1.5 rounded-2xl border border-slate-800">
-                        <div className="w-12 h-12 flex items-center justify-center bg-[#FF2424] text-white rounded-xl font-black shadow-[0_0_20px_rgba(255,36,36,0.3)]">
+                    {/* ========================================== */}
+                    {/* 🔢 INDICATEUR DE PAGE - Courante / Total */}
+                    {/* ========================================== */}
+                    <div className="
+            flex items-center gap-2
+            bg-slate-900/50 backdrop-blur-sm
+            border border-slate-800/60
+            rounded-2xl
+            p-1.5
+            shadow-lg
+        ">
+                        {/* Page courante (mise en avant) */}
+                        <div className="
+                w-11 h-11 sm:w-12 sm:h-12
+                flex items-center justify-center
+                bg-[#FF2424]
+                text-white
+                rounded-xl
+                text-base font-bold tabular-nums
+                shadow-lg shadow-[#FF2424]/30
+                ring-1 ring-[#FF2424]/40
+            ">
                             {currentPage}
                         </div>
-                        <span className="text-slate-600 font-bold px-2">/</span>
-                        <div className="w-12 h-12 flex items-center justify-center bg-[#080C14] text-slate-400 rounded-xl font-bold">
+
+                        {/* Séparateur */}
+                        <span className="text-slate-600 font-bold px-1 select-none">
+                            /
+                        </span>
+
+                        {/* Nombre total de pages */}
+                        <div className="
+                w-11 h-11 sm:w-12 sm:h-12
+                flex items-center justify-center
+                bg-slate-950/80
+                border border-slate-800/60
+                text-slate-400
+                rounded-xl
+                text-base font-semibold tabular-nums
+            ">
                             {lastPage}
                         </div>
                     </div>
 
+                    {/* ========================================== */}
+                    {/* ➡️ BOUTON SUIVANT */}
+                    {/* ========================================== */}
                     <button
-                        onClick={() => { setCurrentPage(p => p + 1); if (navigator.vibrate) navigator.vibrate(15); }}
+                        onClick={() => {
+                            setCurrentPage(p => p + 1);
+                            // Retour haptique léger sur mobile (logique conservée)
+                            if (navigator.vibrate) navigator.vibrate(15);
+                        }}
                         disabled={currentPage === lastPage || loading}
-                        className="p-3 bg-[#141A28] border border-slate-800 rounded-2xl text-white hover:border-[#FF2424] disabled:opacity-10 transition-all active:scale-90 shadow-xl"
+                        aria-label="Page suivante"
+                        className="
+                group
+                p-3 sm:p-3.5
+                bg-slate-900/50 backdrop-blur-sm
+                border border-slate-800/60
+                rounded-2xl
+                text-slate-400
+                shadow-lg
+                hover:border-[#FF2424]/60 hover:text-[#FF2424] hover:bg-slate-900/70
+                hover:shadow-xl hover:shadow-[#FF2424]/10
+                disabled:opacity-20 disabled:cursor-not-allowed
+                disabled:hover:border-slate-800/60 disabled:hover:text-slate-400 disabled:hover:bg-slate-900/50
+                transition-all duration-200
+                active:scale-90
+            "
                     >
-                        <ChevronRight size={24} />
+                        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-0.5 transition-transform duration-200" />
                     </button>
-                </div>
+                </nav>
             )}
         </div>
     );
