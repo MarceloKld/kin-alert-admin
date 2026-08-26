@@ -252,7 +252,7 @@ export default function AuditClient() {
                             animate-fade-in-up
                         "
                                         style={{
-                                            animationDelay: `${index * 30}ms`
+                                            animationDelay: `${index * 250}ms`
                                         }}
                                     >
                                         {/* ========================================== */}
