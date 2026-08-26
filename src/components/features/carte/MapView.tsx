@@ -13,6 +13,16 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import 'leaflet/dist/leaflet.css';
 import '@/styles/leaflet-custom.css';
 
+import {
+    Search,
+    ChevronDown,
+    Clock,
+    CheckCircle2,
+    XCircle,
+    LayoutGrid,
+    AlertCircle,
+} from 'lucide-react';
+
 /* Fix icônes Leaflet */
 const fixLeafletIcons = () => {
     type IconDefaultPrototype = L.Icon.Default & { _getIconUrl?: () => void };
@@ -156,6 +166,17 @@ export default function MapView() {
             popupAnchor: [0, -36]
         });
     };
+
+    // ==========================================
+    // 🔢 Nombre de filtres actifs (UI uniquement)
+    // ==========================================
+    const activeFiltersCount =
+        (filters.statut !== 'tous' ? 1 : 0) +
+        (filters.communeId !== 0 ? 1 : 0) +
+        (filters.search.trim() !== '' ? 1 : 0);
+
+
+
     return (
         <div className="relative h-full w-full">
 
@@ -182,121 +203,412 @@ export default function MapView() {
     🎛️ PANEL FILTRES (RESPONSIVE)
     ═══════════════════════════════════════════════════════ */}
 
-            {/* Bouton Toggle Mobile (décalé à left-14 pour dégager le zoom sur mobile) */}
+            {/* ──────────────────────────────────────────────────────
+    🔢 Compteur de filtres actifs (dérivé — UI uniquement)
+    À placer avec les autres constantes du composant
+    ────────────────────────────────────────────────────── */}
+            {/*
+const activeFiltersCount =
+    (filters.statut !== 'tous' ? 1 : 0) +
+    (filters.communeId !== 0 ? 1 : 0) +
+    (filters.search.trim() !== '' ? 1 : 0);
+*/}
+
+            {/* ══════════════════════════════════════════════════════
+    📱 BOUTON TOGGLE MOBILE
+    left-14 pour dégager les contrôles de zoom Leaflet
+    ══════════════════════════════════════════════════════ */}
             <button
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="sm:hidden absolute top-4 left-14 z-20 bg-black/80 backdrop-blur-xl border border-white/10 text-white p-2.5 rounded-xl flex items-center gap-2 shadow-xl font-bold text-xs uppercase"
+                aria-expanded={showMobileFilters}
+                aria-controls="filters-panel"
+                aria-label={showMobileFilters ? "Masquer les filtres" : "Afficher les filtres"}
+                className="
+        sm:hidden absolute top-4 left-14 z-20
+        flex items-center gap-2
+        bg-slate-950/85 backdrop-blur-xl
+        border border-white/10
+        text-white
+        px-3 py-2.5 rounded-xl
+        text-xs font-bold uppercase tracking-wide
+        shadow-xl
+        hover:border-white/20 hover:bg-slate-950/95
+        active:scale-95
+        transition-all duration-200
+    "
             >
-                <Filter className="w-4 h-4 text-red-500" />
-                {showMobileFilters ? "Masquer" : "Filtres"}
+                <Filter className="w-4 h-4 text-[#FF2424] shrink-0" />
+                <span>{showMobileFilters ? "Masquer" : "Filtres"}</span>
+
+                {/* Badge du nombre de filtres actifs */}
+                {activeFiltersCount > 0 && (
+                    <span className="
+            flex items-center justify-center
+            min-w-[18px] h-[18px] px-1
+            bg-[#FF2424] text-white
+            rounded-full
+            text-[10px] font-bold tabular-nums
+            shadow-lg shadow-[#FF2424]/40
+        ">
+                        {activeFiltersCount}
+                    </span>
+                )}
             </button>
 
-            {/* Conteneur Filtres (sm:left-16 décale le panneau après le zoom Leaflet sur PC) */}
-            <div className={`
-    absolute top-16 sm:top-4 left-4 right-4 sm:right-auto sm:left-16 z-20
-    bg-black/80 backdrop-blur-xl border border-white/10 
-    rounded-2xl p-4 space-y-4 w-auto sm:w-80 shadow-2xl 
-    max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-2rem)] overflow-y-auto
-    transition-all duration-300
-    ${showMobileFilters ? 'block' : 'hidden sm:block'}
-`}>
-                <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white uppercase flex items-center gap-2">
-                        <Filter className="w-4 h-4 text-red-500" />
-                        Filtres
+            {/* ══════════════════════════════════════════════════════
+    🎛️ CONTENEUR DES FILTRES
+    sm:left-16 décale le panneau après le zoom Leaflet (desktop)
+    ══════════════════════════════════════════════════════ */}
+            <aside
+                id="filters-panel"
+                aria-label="Filtres de la carte"
+                className={`
+        absolute top-16 sm:top-4 left-4 right-4 sm:right-auto sm:left-16 z-20
+        w-auto sm:w-80
+        bg-slate-950/85 backdrop-blur-xl
+        border border-white/10
+        rounded-2xl
+        shadow-2xl
+        max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-2rem)]
+        overflow-y-auto overscroll-contain
+        scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent
+        transition-all duration-300 ease-out
+        ${showMobileFilters
+                        ? 'block opacity-100 translate-y-0'
+                        : 'hidden sm:block sm:opacity-100'
+                    }
+    `}
+            >
+                {/* ══════════════════════════════════════════════════
+        📌 EN-TÊTE — Titre + actions
+        Sticky pour rester visible pendant le scroll
+        ══════════════════════════════════════════════════ */}
+                <header className="
+        sticky top-0 z-10
+        flex items-center justify-between gap-3
+        px-4 py-3.5
+        bg-slate-950/90 backdrop-blur-xl
+        border-b border-white/10
+    ">
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-white tracking-tight">
+                        <span className="
+                relative flex items-center justify-center
+                w-7 h-7 rounded-lg
+                bg-[#FF2424]/10 border border-[#FF2424]/25
+            ">
+                            <Filter className="w-3.5 h-3.5 text-[#FF2424]" />
+                        </span>
+                        <span>Filtres</span>
+
+                        {/* Compteur inline (desktop) */}
+                        {activeFiltersCount > 0 && (
+                            <span className="
+                    px-2 py-0.5 rounded-full
+                    bg-[#FF2424]/15 text-[#FF2424]
+                    ring-1 ring-[#FF2424]/30
+                    text-[10px] font-bold tabular-nums
+                ">
+                                {activeFiltersCount}
+                            </span>
+                        )}
                     </h3>
-                    <div className="flex items-center gap-1">
+
+                    <div className="flex items-center gap-1 shrink-0">
+                        {/* Réinitialiser */}
                         <button
                             onClick={() => setFilters({ statut: 'tous', communeId: 0, search: '' })}
-                            className="p-1.5 hover:bg-white/10 rounded-lg transition-all"
-                            title="Réinitialiser"
+                            disabled={activeFiltersCount === 0}
+                            title="Réinitialiser les filtres"
+                            aria-label="Réinitialiser les filtres"
+                            className="
+                    group p-2 rounded-lg
+                    text-slate-400
+                    hover:bg-white/10 hover:text-white
+                    disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-400
+                    active:scale-90
+                    transition-all duration-200
+                "
                         >
-                            <RefreshCcw className="w-4 h-4 text-gray-400 hover:text-white" />
+                            <RefreshCcw className="w-4 h-4 group-hover:-rotate-90 transition-transform duration-300" />
                         </button>
 
-                        {/* Bouton fermer sur mobile */}
+                        {/* Fermer (mobile uniquement) */}
                         <button
                             onClick={() => setShowMobileFilters(false)}
-                            className="sm:hidden p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white"
+                            aria-label="Fermer le panneau de filtres"
+                            className="
+                    sm:hidden p-2 rounded-lg
+                    text-slate-400
+                    hover:bg-white/10 hover:text-white
+                    active:scale-90
+                    transition-all duration-200
+                "
                         >
                             <X className="w-4 h-4" />
                         </button>
                     </div>
-                </div>
+                </header>
 
-                {/* Recherche */}
-                <div>
-                    <label className="text-xs text-gray-400 font-semibold uppercase block mb-2">
-                        Recherche
-                    </label>
-                    <input
-                        type="text"
-                        placeholder="Titre, avenue..."
-                        value={filters.search}
-                        onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                        className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 
-                       text-sm text-white placeholder:text-gray-500
-                       focus:border-red-500 focus:ring-1 focus:ring-red-500 
-                       outline-none transition-all"
-                    />
-                </div>
+                {/* ══════════════════════════════════════════════════
+        📋 CORPS DU PANNEAU
+        ══════════════════════════════════════════════════ */}
+                <div className="p-4 space-y-5">
 
-                {/* FILTRE COMMUNE */}
-                <div>
-                    <label className="text-xs text-gray-400 font-semibold uppercase block mb-2">
-                        Commune
-                    </label>
-                    <select
-                        value={filters.communeId}
-                        onChange={(e) => setFilters(prev => ({ ...prev, communeId: Number(e.target.value) }))}
-                        className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 
-                       text-sm text-white 
-                       focus:border-red-500 focus:ring-1 focus:ring-red-500 
-                       outline-none transition-all cursor-pointer"
-                    >
-                        <option value={0} className="bg-gray-900">Toutes les communes</option>
-                        {communes.map((commune) => (
-                            <option key={commune.id} value={commune.id} className="bg-gray-900">
-                                📍 {commune.nom}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                    {/* ──────────────────────────────────────────────
+            🔍 RECHERCHE
+            ────────────────────────────────────────────── */}
+                    <div className="space-y-2">
+                        <label
+                            htmlFor="filter-search"
+                            className="block text-[11px] text-slate-400 font-semibold uppercase tracking-wide"
+                        >
+                            Recherche
+                        </label>
 
-                {/* FILTRE STATUT */}
-                <div>
-                    <label className="text-xs text-gray-400 font-semibold uppercase block mb-2">
-                        Statut
-                    </label>
-                    <select
-                        value={filters.statut}
-                        onChange={(e) => setFilters(prev => ({ ...prev, statut: e.target.value }))}
-                        className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 
-                       text-sm text-white 
-                       focus:border-red-500 focus:ring-1 focus:ring-red-500 
-                       outline-none transition-all cursor-pointer"
-                    >
-                        <option value="tous" className="bg-gray-900">Tous les statuts</option>
-                        <option value="en_attente" className="bg-gray-900">⏳ En attente</option>
-                        <option value="valide" className="bg-gray-900">✓ Validés</option>
-                        <option value="rejete" className="bg-gray-900">✗ Rejetés</option>
-                    </select>
-                </div>
+                        <div className="relative">
+                            {/* Icône loupe */}
+                            <Search className="
+                    absolute left-3 top-1/2 -translate-y-1/2
+                    w-4 h-4 text-slate-500 pointer-events-none
+                " />
 
-                {/* Stats */}
-                <div className="pt-3 border-t border-white/10 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-400">Affichés</span>
-                        <span className="font-bold text-white text-lg tabular-nums">{incidents.length}</span>
-                    </div>
-                    {loading && (
-                        <div className="flex items-center gap-2 text-blue-400 text-xs">
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                            <span>Chargement...</span>
+                            <input
+                                id="filter-search"
+                                type="text"
+                                placeholder="Titre, avenue..."
+                                value={filters.search}
+                                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                                autoComplete="off"
+                                className="
+                        w-full h-10
+                        bg-white/5 border border-white/15
+                        rounded-xl
+                        pl-9 pr-9
+                        text-sm text-white placeholder:text-slate-500
+                        hover:border-white/25
+                        focus:border-[#FF2424] focus:ring-2 focus:ring-[#FF2424]/20
+                        outline-none transition-all duration-200
+                    "
+                            />
+
+                            {/* Bouton effacer la recherche */}
+                            {filters.search && (
+                                <button
+                                    onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
+                                    aria-label="Effacer la recherche"
+                                    className="
+                            absolute right-2 top-1/2 -translate-y-1/2
+                            p-1 rounded-md
+                            text-slate-500 hover:text-white hover:bg-white/10
+                            transition-all duration-200
+                        "
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
                         </div>
-                    )}
+                    </div>
+
+                    {/* ──────────────────────────────────────────────
+            🏙️ FILTRE COMMUNE (select natif — liste longue)
+            ────────────────────────────────────────────── */}
+                    <div className="space-y-2">
+                        <label
+                            htmlFor="filter-commune"
+                            className="block text-[11px] text-slate-400 font-semibold uppercase tracking-wide"
+                        >
+                            Commune
+                        </label>
+
+                        <div className="relative">
+                            {/* Icône localisation */}
+                            <MapPin className="
+                    absolute left-3 top-1/2 -translate-y-1/2
+                    w-4 h-4 text-slate-500 pointer-events-none z-10
+                " />
+
+                            <select
+                                id="filter-commune"
+                                value={filters.communeId}
+                                onChange={(e) => setFilters(prev => ({ ...prev, communeId: Number(e.target.value) }))}
+                                className="
+                        w-full h-10
+                        bg-white/5 border border-white/15
+                        rounded-xl
+                        pl-9 pr-9
+                        text-sm text-white
+                        hover:border-white/25
+                        focus:border-[#FF2424] focus:ring-2 focus:ring-[#FF2424]/20
+                        outline-none transition-all duration-200
+                        cursor-pointer
+                        appearance-none
+                    "
+                            >
+                                <option value={0} className="bg-slate-900">
+                                    Toutes les communes
+                                </option>
+                                {communes.map((commune) => (
+                                    <option key={commune.id} value={commune.id} className="bg-slate-900">
+                                        {commune.nom}
+                                    </option>
+                                ))}
+                            </select>
+
+                            {/* Chevron custom (appearance-none) */}
+                            <ChevronDown className="
+                    absolute right-3 top-1/2 -translate-y-1/2
+                    w-4 h-4 text-slate-500 pointer-events-none
+                " />
+                        </div>
+                    </div>
+
+                    {/* ──────────────────────────────────────────────
+            🏷️ FILTRE STATUT (segmented control + icônes SVG)
+            Remplace le select natif pour supprimer les emojis
+            ────────────────────────────────────────────── */}
+                    <div className="space-y-2">
+                        <span className="block text-[11px] text-slate-400 font-semibold uppercase tracking-wide">
+                            Statut
+                        </span>
+
+                        <div
+                            role="radiogroup"
+                            aria-label="Filtrer par statut"
+                            className="grid grid-cols-2 gap-2"
+                        >
+                            {[
+                                {
+                                    value: 'tous',
+                                    label: 'Tous',
+                                    icon: LayoutGrid,
+                                    active: 'bg-slate-500/15 text-slate-100 border-slate-400/40 ring-slate-400/20',
+                                    dot: 'bg-slate-400',
+                                },
+                                {
+                                    value: 'en_attente',
+                                    label: 'En attente',
+                                    icon: Clock,
+                                    active: 'bg-amber-500/15 text-amber-300 border-amber-500/40 ring-amber-500/20',
+                                    dot: 'bg-amber-400',
+                                },
+                                {
+                                    value: 'valide',
+                                    label: 'Validés',
+                                    icon: CheckCircle2,
+                                    active: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 ring-emerald-500/20',
+                                    dot: 'bg-emerald-400',
+                                },
+                                {
+                                    value: 'rejete',
+                                    label: 'Rejetés',
+                                    icon: XCircle,
+                                    active: 'bg-[#FF2424]/15 text-[#FF6B6B] border-[#FF2424]/40 ring-[#FF2424]/20',
+                                    dot: 'bg-[#FF2424]',
+                                },
+                            ].map((option) => {
+                                const isSelected = filters.statut === option.value;
+
+                                return (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={isSelected}
+                                        onClick={() => setFilters(prev => ({ ...prev, statut: option.value }))}
+                                        className={`
+                                group relative
+                                flex items-center gap-2
+                                h-10 px-3
+                                rounded-xl border
+                                text-xs font-semibold
+                                transition-all duration-200
+                                active:scale-[0.97]
+                                ${isSelected
+                                                ? `${option.active} ring-1`
+                                                : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/25 hover:text-slate-200'
+                                            }
+                            `}
+                                    >
+                                        <option.icon
+                                            className={`
+                                    w-3.5 h-3.5 shrink-0
+                                    transition-transform duration-200
+                                    ${isSelected ? 'scale-110' : 'group-hover:scale-105'}
+                                `}
+                                        />
+                                        <span className="truncate">{option.label}</span>
+
+                                        {/* Pastille indicatrice quand sélectionné */}
+                                        {isSelected && (
+                                            <span className={`
+                                    absolute top-1.5 right-1.5
+                                    w-1.5 h-1.5 rounded-full
+                                    ${option.dot}
+                                    animate-pulse
+                                `} />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* ──────────────────────────────────────────────
+            📊 STATISTIQUES
+            ────────────────────────────────────────────── */}
+                    <div className="pt-4 border-t border-white/10 space-y-3">
+                        {/* Compteur d'incidents affichés */}
+                        <div className="
+                flex items-center justify-between gap-3
+                px-3 py-2.5 rounded-xl
+                bg-white/5 border border-white/10
+            ">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                <span className="text-xs text-slate-400 font-medium truncate">
+                                    Incidents affichés
+                                </span>
+                            </div>
+
+                            <span className="
+                    shrink-0
+                    text-lg font-bold text-white tabular-nums
+                ">
+                                {incidents.length}
+                            </span>
+                        </div>
+
+                        {/* Indicateur de chargement */}
+                        {loading && (
+                            <div className="
+                    flex items-center gap-2
+                    px-3 py-2 rounded-xl
+                    bg-blue-500/10 border border-blue-500/25
+                    animate-fade-in
+                ">
+                                <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin shrink-0" />
+                                <span className="text-xs text-blue-300 font-medium">
+                                    Chargement des données...
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Empty state — aucun résultat */}
+                        {!loading && incidents.length === 0 && (
+                            <div className="
+                    flex items-start gap-2.5
+                    px-3 py-2.5 rounded-xl
+                    bg-amber-500/10 border border-amber-500/25
+                ">
+                                <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                                <p className="text-xs text-amber-200/90 leading-relaxed">
+                                    Aucun incident ne correspond aux filtres sélectionnés.
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </aside>
 
             {/* CARTE */}
             <MapContainer
