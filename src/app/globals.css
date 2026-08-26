@@ -268,3 +268,94 @@ body {
   animation-delay: 0.5s;
   opacity: 0;
 }
+
+
+
+/* ============================================ */
+/* 🔔 ANIMATION SWING - Balancier (Bell) */
+/* ============================================ */
+
+@keyframes swing {
+  0%, 100% {
+    transform: rotate(0deg);
+    transform-origin: top center;
+  }
+  10% {
+    transform: rotate(15deg);
+  }
+  20% {
+    transform: rotate(-10deg);
+  }
+  30% {
+    transform: rotate(5deg);
+  }
+  40% {
+    transform: rotate(-5deg);
+  }
+  50%, 100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Animation - Fade in depuis la gauche */
+@keyframes fade-in-left {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ============================================ */
+/* 🎯 CLASSES D'ANIMATION */
+/* ============================================ */
+
+.animate-swing {
+  animation: swing 2s ease-in-out 1;
+  animation-delay: 0.5s;
+}
+
+.animate-swing-infinite {
+  animation: swing 3s ease-in-out infinite;
+}
+
+.animate-fade-in-left {
+  animation: fade-in-left 0.6s ease-out forwards;
+}
+
+
+/* ============================================ */
+/* ✨ ANIMATIONS POUR NOTIFICATIONS */
+/* ============================================ */
+
+/* Animation - Shimmer (effet de brillance) */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* Animation - Bounce lent */
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Classes d'animation */
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
